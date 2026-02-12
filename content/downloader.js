@@ -126,13 +126,28 @@ const Downloader = (() => {
       link.download = fileName;
       link.style.display = 'none';
       document.body.appendChild(link);
-      link.click();
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
+      // Guaranteed cleanup function
+      let cleanupDone = false;
+      const performCleanup = () => {
+        if (cleanupDone) return;
+        try {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+          cleanupDone = true;
+        } catch (err) {
+          console.warn('[UYAP-EXT] Cleanup error:', err);
+        }
+      };
+
+      // Perform download with cleanup guarantee
+      try {
+        link.click();
+        setTimeout(performCleanup, TIMEOUTS.BLOB_CLEANUP_DELAY);
+      } catch (err) {
+        performCleanup(); // Immediate cleanup on error
+        throw err;
+      }
 
       return {
         success: true,
@@ -211,7 +226,7 @@ const Downloader = (() => {
       for (let i = 0; i < evraklar.length; i++) {
         // Pause kontrolü
         while (isPaused && abortController && !abortController.signal.aborted) {
-          await sleep(100);
+          await sleep(TIMEOUTS.PAUSE_CHECK_INTERVAL);
         }
 
         // İptal kontrolü
@@ -265,6 +280,14 @@ const Downloader = (() => {
           await sleep(settings.downloadDelay || DEFAULT_SETTINGS.downloadDelay);
         }
       }
+
+      // Return download results
+      return {
+        completed: AppState.stats.completed,
+        failed: AppState.stats.failed,
+        total: evraklar.length,
+        sessionExpired: AppState.sessionExpired
+      };
     },
 
     pause() {

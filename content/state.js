@@ -99,6 +99,7 @@ const AppState = {
 
   // Durumu sıfırla
   reset() {
+    // State cleanup
     this.evraklar = [];
     this.seciliEvrakIds = new Set();
     this.dosyaBilgileri = null;
@@ -108,5 +109,16 @@ const AppState = {
     this.pagination = null;
     this.kisiAdi = '';
     this.initialized = false;
+
+    // UI cleanup
+    UI.renderEvraklar(); // Body'yi temizler
+    UI.updateStats('<p>Başlatmak için <strong>Dosyaları Tara</strong> butonuna tıklayın.</p>');
+    UI.showMode('scan');
+
+    // FAB pulse efektini kaldır
+    const fab = document.getElementById('uyap-ext-fab');
+    if (fab) fab.classList.remove('uyap-ext-fab--pulse');
+
+    console.log('[UYAP-EXT] State reset complete');
   }
 };

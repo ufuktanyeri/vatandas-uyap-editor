@@ -16,12 +16,63 @@
 
   console.log('[UYAP-EXT] Content script loaded');
 
+  // ===== CLEANUP INFRASTRUCTURE =====
+
+  // Module-scoped cleanup variables
+  let modalObserver = null;
+  const eventRegistry = new Map();
+
+  /**
+   * Event listener kayıt sistemi
+   * Tüm listener'ları track eder, cleanup için
+   */
+  function registerEventListener(element, event, handler) {
+    if (!eventRegistry.has(element)) {
+      eventRegistry.set(element, []);
+    }
+    eventRegistry.get(element).push({ event, handler });
+    element.addEventListener(event, handler);
+  }
+
+  /**
+   * MutationObserver cleanup
+   */
+  function cleanupObservers() {
+    if (modalObserver) {
+      modalObserver.disconnect();
+      modalObserver = null;
+      console.log('[UYAP-EXT] MutationObserver cleaned up');
+    }
+  }
+
+  /**
+   * Event listener'ları temizle
+   */
+  function cleanupEventListeners() {
+    for (const [element, handlers] of eventRegistry) {
+      handlers.forEach(({ event, handler }) => {
+        element.removeEventListener(event, handler);
+      });
+    }
+    eventRegistry.clear();
+    console.log('[UYAP-EXT] Event listeners cleaned up');
+  }
+
   // ===== INIT =====
 
   function init() {
     UI.createUI();
     bindEvents();
     observeModal();
+
+    // Beforeunload cleanup
+    window.addEventListener('beforeunload', () => {
+      cleanupObservers();
+      cleanupEventListeners();
+      Downloader.cancel();
+      console.log('[UYAP-EXT] Content script cleanup complete');
+    });
+
     console.log('[UYAP-EXT] UI initialized, observing modal...');
   }
 
@@ -31,31 +82,31 @@
     // FAB → Drawer aç
     const fab = document.getElementById('uyap-ext-fab');
     if (fab) {
-      fab.addEventListener('click', () => UI.openDrawer());
+      registerEventListener(fab, 'click', () => UI.openDrawer());
     }
 
     // Close → Drawer kapat
     const closeBtn = document.getElementById('uyap-ext-close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => UI.closeDrawer());
+      registerEventListener(closeBtn, 'click', () => UI.closeDrawer());
     }
 
     // Overlay → Drawer kapat
     const overlay = document.getElementById('uyap-ext-overlay');
     if (overlay) {
-      overlay.addEventListener('click', () => UI.closeDrawer());
+      registerEventListener(overlay, 'click', () => UI.closeDrawer());
     }
 
     // Tara butonu
     const scanBtn = document.getElementById('uyap-ext-scan');
     if (scanBtn) {
-      scanBtn.addEventListener('click', handleScan);
+      registerEventListener(scanBtn, 'click', handleScan);
     }
 
     // Tümünü seç
     const selectAllBtn = document.getElementById('uyap-ext-select-all');
     if (selectAllBtn) {
-      selectAllBtn.addEventListener('click', () => {
+      registerEventListener(selectAllBtn, 'click', () => {
         AppState.tumunuSec();
         UI.renderEvraklar();
       });
@@ -64,7 +115,7 @@
     // Seçimi kaldır
     const deselectAllBtn = document.getElementById('uyap-ext-deselect-all');
     if (deselectAllBtn) {
-      deselectAllBtn.addEventListener('click', () => {
+      registerEventListener(deselectAllBtn, 'click', () => {
         AppState.secimiTemizle();
         UI.renderEvraklar();
       });
@@ -73,31 +124,32 @@
     // İndir butonu
     const downloadBtn = document.getElementById('uyap-ext-download');
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', handleDownload);
+      registerEventListener(downloadBtn, 'click', handleDownload);
     }
 
     // Duraklat butonu
     const pauseBtn = document.getElementById('uyap-ext-pause');
     if (pauseBtn) {
-      pauseBtn.addEventListener('click', handlePause);
+      registerEventListener(pauseBtn, 'click', handlePause);
     }
 
     // İptal butonu
     const cancelBtn = document.getElementById('uyap-ext-cancel');
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', handleCancel);
+      registerEventListener(cancelBtn, 'click', handleCancel);
     }
 
     // İndirme modu toggle
     const modeToggle = document.getElementById('uyap-ext-mode-toggle');
     if (modeToggle) {
-      modeToggle.addEventListener('change', (e) => {
+      const handleModeChange = (e) => {
         AppState.useSimpleMode = !e.target.checked;
         const label = document.getElementById('uyap-ext-mode-label');
         if (label) {
           label.textContent = e.target.checked ? 'Gelişmiş Mod' : 'Basit Mod';
         }
-      });
+      };
+      registerEventListener(modeToggle, 'change', handleModeChange);
       // Varsayılan: Gelişmiş mod (checkbox checked)
       modeToggle.checked = true;
       AppState.useSimpleMode = false;
@@ -106,7 +158,7 @@
     // Delegated events: evrak checkbox'ları ve grup checkbox'ları
     const body = document.getElementById('uyap-ext-body');
     if (body) {
-      body.addEventListener('change', (e) => {
+      const handleBodyChange = (e) => {
         const target = e.target;
 
         // Evrak checkbox
@@ -130,10 +182,11 @@
             UI.renderEvraklar();
           }
         }
-      });
+      };
+      registerEventListener(body, 'change', handleBodyChange);
 
       // Grup header tıklama → aç/kapa
-      body.addEventListener('click', (e) => {
+      const handleBodyClick = (e) => {
         const header = e.target.closest('.uyap-ext-group__header');
         if (!header) return;
 
@@ -151,7 +204,8 @@
             toggle.classList.toggle('uyap-ext-group__toggle--open', !isOpen);
           }
         }
-      });
+      };
+      registerEventListener(body, 'click', handleBodyClick);
     }
   }
 
@@ -159,7 +213,7 @@
 
   async function handleScan() {
     UI.showMode('scanning');
-    UI.updateStats('<p><i class="fa fa-spinner fa-spin"></i> Dosyalar taranıyor...</p>');
+    UI.updateStats(UI_MESSAGES.SCAN_IN_PROGRESS);
 
     try {
       await waitForFiletree(30000);
@@ -263,7 +317,7 @@
       AppState.downloadStatus = 'completed';
       UI.updateProgress(AppState.stats.completed, AppState.stats.total, 'completed');
 
-      const statsHtml = `<p>✅ <strong>${AppState.stats.completed}</strong> indirildi` +
+      const statsHtml = `<p>${UI_MESSAGES.SUCCESS_ICON} <strong>${AppState.stats.completed}</strong> ${UI_MESSAGES.DOWNLOAD_COMPLETE}` +
         (AppState.stats.failed > 0 ? `, <strong style="color:#dc2626;">${AppState.stats.failed}</strong> başarısız` : '') +
         ` / ${AppState.stats.total} toplam</p>`;
       UI.updateStats(statsHtml);
@@ -318,7 +372,8 @@
   function observeModal() {
     let debounceTimer = null;
 
-    const observer = new MutationObserver(() => {
+    // Module-scoped observer'a ata (cleanup için)
+    modalObserver = new MutationObserver(() => {
       if (debounceTimer) clearTimeout(debounceTimer);
 
       debounceTimer = setTimeout(() => {
@@ -333,13 +388,13 @@
           console.log('[UYAP-EXT] UYAP modal closed');
           AppState.reset();
         }
-      }, 150);
+      }, TIMEOUTS.MUTATION_DEBOUNCE);
     });
 
     const modalEl = document.querySelector(SELECTORS.MODAL);
     const target = (modalEl && modalEl.parentElement) || document.body;
 
-    observer.observe(target, {
+    modalObserver.observe(target, {
       childList: true,
       subtree: true,
       attributes: true,

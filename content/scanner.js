@@ -227,7 +227,7 @@ function detectPagination() {
  * Filetree'nin DOM'a yüklenmesini bekle
  */
 function waitForFiletree(timeout) {
-  timeout = timeout || 30000;
+  timeout = timeout || TIMEOUTS.FILETREE_LOAD;
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -244,7 +244,7 @@ function waitForFiletree(timeout) {
         return;
       }
 
-      setTimeout(check, 500);
+      setTimeout(check, TIMEOUTS.POLLING_INTERVAL);
     }
 
     check();

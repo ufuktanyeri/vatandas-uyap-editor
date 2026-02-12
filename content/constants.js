@@ -63,6 +63,27 @@ const RETRY_CONFIG = {
   DELAY_MULTIPLIER: 2           // Üstel artış: 1s, 2s
 };
 
+// Timeout değerleri
+const TIMEOUTS = {
+  FILETREE_LOAD: 30000,        // scanner.js waitForFiletree
+  MUTATION_DEBOUNCE: 150,      // main.js observeModal debounce
+  POLLING_INTERVAL: 500,       // scanner.js waitForFiletree polling
+  BLOB_CLEANUP_DELAY: 100,     // downloader.js cleanup timeout
+  PAUSE_CHECK_INTERVAL: 100    // downloader.js pause loop
+};
+
+// UI mesajları ve icon'lar
+const UI_MESSAGES = {
+  SUCCESS_ICON: '✅',
+  WARNING_ICON: '⚠',
+  ERROR_ICON: '❌',
+  LOG_PREFIX: '[UYAP-EXT]',
+  SCAN_IN_PROGRESS: '<p><i class="fa fa-spinner fa-spin"></i> Dosyalar taranıyor...</p>',
+  SCAN_COMPLETE: 'evrak bulundu',
+  DOWNLOAD_COMPLETE: 'indirildi',
+  SESSION_EXPIRED: 'UYAP oturumunuz sona erdi. Sayfayı yenileyip tekrar giriş yapın.'
+};
+
 // Storage anahtarları
 const STORAGE_KEYS = {
   SETTINGS: 'uyap-settings'
