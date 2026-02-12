@@ -41,6 +41,12 @@ const AppState = {
   // Initialized flag
   initialized: false,
 
+  // Tree data (nested structure)
+  treeData: null,
+
+  // Açık klasörler (Set of full paths)
+  expandedFolders: new Set(),
+
   // Evrakları klasörlere göre grupla
   getGroupedEvraklar() {
     const groups = new Map();
@@ -97,11 +103,101 @@ const AppState = {
     return this.evraklar.filter(e => this.seciliEvrakIds.has(e.evrakId));
   },
 
+  /**
+   * Klasör açık/kapalı state'ini toggle et
+   */
+  toggleFolderExpanded(fullPath) {
+    if (this.expandedFolders.has(fullPath)) {
+      this.expandedFolders.delete(fullPath);
+    } else {
+      this.expandedFolders.add(fullPath);
+    }
+  },
+
+  /**
+   * Tree'de belirli bir path'e sahip node'u bul
+   */
+  findNodeByPath(tree, fullPath) {
+    function search(nodes) {
+      for (const node of nodes) {
+        if (node.fullPath === fullPath) return node;
+        if (node.type === 'folder' && node.children) {
+          const found = search(node.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+    return search(tree);
+  },
+
+  /**
+   * Klasördeki tüm dosyaları seç (recursive)
+   */
+  selectAllInFolder(node) {
+    const selectFiles = (n) => {
+      if (n.type === 'file') {
+        this.seciliEvrakIds.add(n.evrakId);
+      } else if (n.children) {
+        n.children.forEach(selectFiles);
+      }
+    };
+    selectFiles(node);
+  },
+
+  /**
+   * Klasördeki tüm dosya seçimini kaldır (recursive)
+   */
+  deselectAllInFolder(node) {
+    const deselectFiles = (n) => {
+      if (n.type === 'file') {
+        this.seciliEvrakIds.delete(n.evrakId);
+      } else if (n.children) {
+        n.children.forEach(deselectFiles);
+      }
+    };
+    deselectFiles(node);
+  },
+
+  /**
+   * Klasördeki tüm dosyalar seçili mi kontrol et
+   */
+  isFolderFullySelected(node) {
+    const checkAll = (n) => {
+      if (n.type === 'file') {
+        return this.seciliEvrakIds.has(n.evrakId);
+      }
+      if (n.children && n.children.length > 0) {
+        return n.children.every(checkAll);
+      }
+      return true;
+    };
+    return checkAll(node);
+  },
+
+  /**
+   * Klasördeki toplam dosya sayısı (recursive)
+   */
+  getFileCountInFolder(node) {
+    let count = 0;
+    const traverse = (n) => {
+      if (n.type === 'file') {
+        count++;
+      } else if (n.children) {
+        n.children.forEach(traverse);
+      }
+    };
+    traverse(node);
+    return count;
+  },
+
   // Durumu sıfırla
   reset() {
     // State cleanup
     this.evraklar = [];
     this.seciliEvrakIds = new Set();
+    this.treeData = null;
+    this.expandedFolders = new Set();
     this.dosyaBilgileri = null;
     this.downloadStatus = 'idle';
     this.stats = { total: 0, completed: 0, failed: 0 };

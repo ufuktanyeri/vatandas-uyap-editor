@@ -113,48 +113,62 @@ const Downloader = (() => {
       const { mimeType, extension } = detectFileType(bytes);
       const fileName = `${sanitizeName(evrak.name)}${extension || '.bin'}`;
 
-      // Data URL oluştur ve indir
+      // Data URL oluştur (chrome.downloads için)
       const base64Data = arrayBufferToBase64(arrayBuffer);
       const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
-      // Blob ile indirme (daha güvenilir)
-      const blob = new Blob([arrayBuffer], { type: mimeType });
-      const blobUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-
-      // Guaranteed cleanup function
-      let cleanupDone = false;
-      const performCleanup = () => {
-        if (cleanupDone) return;
-        try {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-          cleanupDone = true;
-        } catch (err) {
-          console.warn('[UYAP-EXT] Cleanup error:', err);
-        }
-      };
-
-      // Perform download with cleanup guarantee
+      // Chrome downloads API ile otomatik indir (kullanıcı onayı gerektirmez)
       try {
-        link.click();
-        setTimeout(performCleanup, TIMEOUTS.BLOB_CLEANUP_DELAY);
-      } catch (err) {
-        performCleanup(); // Immediate cleanup on error
-        throw err;
-      }
+        const response = await chrome.runtime.sendMessage({
+          type: 'DOWNLOAD_FILE',
+          payload: {
+            url: dataUrl,
+            filename: fileName
+          }
+        });
 
-      return {
-        success: true,
-        fileName,
-        mimeType,
-        fileSize: arrayBuffer.byteLength
-      };
+        if (!response || !response.success) {
+          throw new Error(response?.error || 'Background download failed');
+        }
+
+        console.log(`[UYAP-EXT] Downloaded: ${fileName}`);
+
+        return {
+          success: true,
+          fileName,
+          mimeType,
+          fileSize: arrayBuffer.byteLength,
+          downloadId: response.downloadId
+        };
+      } catch (downloadError) {
+        // Fallback: eski blob method (kullanıcı onayı gerektirir)
+        console.warn('[UYAP-EXT] Chrome downloads API failed, fallback to blob:', downloadError);
+
+        const blob = new Blob([arrayBuffer], { type: mimeType });
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          try {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+          } catch (err) {
+            console.warn('[UYAP-EXT] Cleanup error:', err);
+          }
+        }, TIMEOUTS.BLOB_CLEANUP_DELAY);
+
+        return {
+          success: true,
+          fileName,
+          mimeType,
+          fileSize: arrayBuffer.byteLength
+        };
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return { success: false, error: 'İptal edildi' };

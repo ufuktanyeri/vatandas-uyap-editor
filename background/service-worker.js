@@ -31,6 +31,9 @@ async function handleMessage(message, sender) {
     case 'SET_SETTINGS':
       return await setSettings(message.payload);
 
+    case 'DOWNLOAD_FILE':
+      return await downloadFile(message.payload);
+
     default:
       console.warn('[UYAP-EXT] Unknown message type:', message.type);
       return { success: false, error: 'Unknown message type' };
@@ -51,6 +54,29 @@ async function setSettings(settings) {
       resolve({ success: true });
     });
   });
+}
+
+/**
+ * Chrome downloads API ile dosya indir
+ * Kullanıcı onayı gerektirmez, otomatik indirir
+ */
+async function downloadFile(payload) {
+  const { url, filename } = payload;
+
+  try {
+    const downloadId = await chrome.downloads.download({
+      url,
+      filename,
+      saveAs: false, // Otomatik kaydet, kullanıcıya sorma
+      conflictAction: 'uniquify' // Aynı isimde dosya varsa (1), (2) ekle
+    });
+
+    console.log(`[UYAP-EXT] Download started: ${filename} (ID: ${downloadId})`);
+    return { success: true, downloadId };
+  } catch (error) {
+    console.error('[UYAP-EXT] Download error:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 // Extension kurulum/güncelleme

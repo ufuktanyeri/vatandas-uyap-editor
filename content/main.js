@@ -161,16 +161,37 @@
       const handleBodyChange = (e) => {
         const target = e.target;
 
-        // Evrak checkbox
+        // YENİ: Folder checkbox (tree view)
+        if (target.classList.contains('uyap-ext-folder-checkbox')) {
+          const fullPath = target.dataset.path;
+          const node = AppState.findNodeByPath(AppState.treeData, fullPath);
+
+          if (!node) {
+            console.warn('[UYAP-EXT] Folder node not found:', fullPath);
+            return;
+          }
+
+          if (target.checked) {
+            AppState.selectAllInFolder(node);
+          } else {
+            AppState.deselectAllInFolder(node);
+          }
+
+          UI.renderEvraklar();
+          return;
+        }
+
+        // File checkbox (evrak checkbox)
         if (target.classList.contains('uyap-ext-card__checkbox')) {
           const evrakId = target.dataset.evrakId;
           if (evrakId) {
             AppState.toggleEvrakSecimi(evrakId);
             UI.updateSelectionUI();
           }
+          return;
         }
 
-        // Grup checkbox
+        // FALLBACK: Eski grup checkbox mantığı
         if (target.classList.contains('uyap-ext-group__checkbox')) {
           const folderName = target.dataset.folder;
           if (folderName) {
@@ -187,6 +208,19 @@
 
       // Grup header tıklama → aç/kapa
       const handleBodyClick = (e) => {
+        // YENİ: Tree header toggle
+        const treeHeader = e.target.closest('.uyap-ext-tree-header');
+        if (treeHeader) {
+          // Checkbox tıklamasını atla
+          if (e.target.classList.contains('uyap-ext-folder-checkbox')) return;
+
+          const fullPath = treeHeader.dataset.path;
+          AppState.toggleFolderExpanded(fullPath);
+          UI.renderEvraklar();
+          return;
+        }
+
+        // FALLBACK: Eski grup header mantığı (backward compat)
         const header = e.target.closest('.uyap-ext-group__header');
         if (!header) return;
 
@@ -218,9 +252,21 @@
     try {
       await waitForFiletree(30000);
 
-      // Tarama
-      const evraklar = scanFiletree();
-      AppState.evraklar = evraklar;
+      // Tarama - YENİ: Tree + flat list döner
+      const scanResult = scanFiletree();
+      AppState.evraklar = scanResult.flatList;  // Backward compat
+      AppState.treeData = scanResult.tree;       // YENİ: Tree data
+
+      // Tüm klasörleri varsayılan olarak aç
+      function expandAllFolders(nodes) {
+        nodes.forEach(node => {
+          if (node.type === 'folder') {
+            AppState.expandedFolders.add(node.fullPath);
+            if (node.children) expandAllFolders(node.children);
+          }
+        });
+      }
+      expandAllFolders(scanResult.tree);
 
       // Pagination kontrolü
       const pagination = detectPagination();
@@ -237,7 +283,7 @@
       AppState.tumunuSec();
 
       // Stats güncelle
-      let statsHtml = `<p><strong>${evraklar.length}</strong> evrak bulundu</p>`;
+      let statsHtml = `<p><strong>${scanResult.flatList.length}</strong> evrak bulundu</p>`;
       if (dosya) {
         statsHtml += `<p>Dosya ID: <strong>${dosya.dosyaId}</strong>`;
         if (dosya.dosyaNo) statsHtml += ` | No: <strong>${dosya.dosyaNo}</strong>`;
@@ -256,7 +302,7 @@
       UI.showMode('select');
 
       console.log('[UYAP-EXT] Scan complete:', {
-        evrakCount: evraklar.length,
+        evrakCount: scanResult.flatList.length,
         dosyaId: dosya ? dosya.dosyaId : null,
         kisiAdi: AppState.kisiAdi
       });

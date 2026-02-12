@@ -3,7 +3,7 @@
   "name": "UYAP Evrak İndirici",
   "version": "2.0.0",
   "description": "UYAP Vatandaş Portalı üzerinde seçilen dosyalardaki evrakları güvenli şekilde toplu indirmenizi sağlar.",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "downloads"],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

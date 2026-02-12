@@ -150,6 +150,83 @@ const UI = (() => {
   }
 
   /**
+   * Recursive tree view renderer
+   * @param {Array} nodes - Tree nodes
+   * @param {Number} level - Nesting level (for indentation)
+   * @returns {String} HTML
+   */
+  function renderTreeView(nodes, level = 0) {
+    if (!nodes || nodes.length === 0) return '';
+
+    return nodes.map(node => {
+      if (node.type === 'folder') {
+        const isExpanded = AppState.expandedFolders.has(node.fullPath);
+        const isFullySelected = AppState.isFolderFullySelected(node);
+        const fileCount = AppState.getFileCountInFolder(node);
+
+        return `
+          <div class="uyap-ext-tree-node uyap-ext-tree-node--folder"
+               data-level="${level}">
+
+            <div class="uyap-ext-tree-header" data-path="${escapeHtml(node.fullPath)}">
+              <span class="uyap-ext-tree-toggle ${isExpanded ? 'uyap-ext-tree-toggle--open' : ''}">
+                <i class="fa fa-caret-right"></i>
+              </span>
+
+              <input type="checkbox"
+                     class="uyap-ext-folder-checkbox"
+                     data-path="${escapeHtml(node.fullPath)}"
+                     ${isFullySelected ? 'checked' : ''}>
+
+              <i class="fa fa-folder uyap-ext-tree-icon"></i>
+
+              <span class="uyap-ext-tree-name">${escapeHtml(node.name)}</span>
+
+              <span class="uyap-ext-tree-count">${fileCount}</span>
+            </div>
+
+            <div class="uyap-ext-tree-children"
+                 style="display: ${isExpanded ? 'block' : 'none'}">
+              ${renderTreeView(node.children, level + 1)}
+            </div>
+          </div>
+        `;
+      } else {
+        // File node
+        const isChecked = AppState.seciliEvrakIds.has(node.evrakId);
+        const metaParts = [];
+        if (node.metadata && node.metadata.evrakTuru) metaParts.push(node.metadata.evrakTuru);
+        if (node.metadata && node.metadata.evrakTarihi) metaParts.push(node.metadata.evrakTarihi);
+
+        return `
+          <div class="uyap-ext-tree-node uyap-ext-tree-node--file"
+               data-level="${level}"
+               data-evrak-id="${node.evrakId}">
+
+            <input type="checkbox"
+                   class="uyap-ext-file-checkbox uyap-ext-card__checkbox"
+                   data-evrak-id="${node.evrakId}"
+                   ${isChecked ? 'checked' : ''}>
+
+            <i class="fa fa-file-text-o uyap-ext-tree-icon"></i>
+
+            <div class="uyap-ext-tree-file-content">
+              <p class="uyap-ext-tree-file-name" title="${escapeHtml(node.name)}">
+                ${escapeHtml(node.name)}
+              </p>
+              ${metaParts.length > 0
+                ? `<div class="uyap-ext-card__meta">
+                     ${metaParts.map(m => `<span>${escapeHtml(m)}</span>`).join('')}
+                   </div>`
+                : ''}
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+  }
+
+  /**
    * Evrak listesini gruplu şekilde render et
    */
   function renderEvraklar() {
@@ -157,6 +234,14 @@ const UI = (() => {
     const emptyEl = $('#uyap-ext-empty');
     if (!body) return;
 
+    // YENİ: Tree data var mı kontrol et
+    if (AppState.treeData && AppState.treeData.length > 0) {
+      body.innerHTML = renderTreeView(AppState.treeData, 0);
+      updateSelectionUI();
+      return;
+    }
+
+    // FALLBACK: Eski grup rendering (backward compat)
     const groups = AppState.getGroupedEvraklar();
 
     if (groups.size === 0) {

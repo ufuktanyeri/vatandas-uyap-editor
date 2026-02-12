@@ -198,7 +198,79 @@ function scanFiletree() {
 
   parseNode(filetree, '');
   console.log(`[UYAP-EXT] Scanner: Found ${evraklar.length} unique evraklar`);
-  return evraklar;
+
+  // Nested tree yapısını oluştur
+  const tree = buildTreeFromFlat(evraklar);
+
+  return {
+    tree,           // Nested structure
+    flatList: evraklar  // Backward compat
+  };
+}
+
+/**
+ * Flat list'ten nested tree yapısı oluştur
+ * @param {Array} flatList - Scanner'dan gelen flat evrak listesi
+ * @returns {Array} Nested tree nodes
+ */
+function buildTreeFromFlat(flatList) {
+  const root = {};
+
+  flatList.forEach(evrak => {
+    const pathParts = evrak.relativePath
+      ? evrak.relativePath.split('/')
+      : [];
+
+    let current = root;
+    let currentPath = [];
+
+    // Klasörleri oluştur
+    pathParts.forEach(folderName => {
+      currentPath.push(folderName);
+      const fullPath = currentPath.join('/');
+
+      if (!current[folderName]) {
+        current[folderName] = {
+          type: 'folder',
+          name: folderName,
+          path: [...currentPath],
+          fullPath,
+          children: {}
+        };
+      }
+      current = current[folderName].children;
+    });
+
+    // Dosyayı ekle
+    const fileNode = {
+      type: 'file',
+      name: evrak.name,
+      fullPath: pathParts.length > 0
+        ? `${evrak.relativePath}/${evrak.name}`
+        : evrak.name,
+      evrakId: evrak.evrakId,
+      metadata: {
+        evrakTuru: evrak.evrakTuru,
+        evrakTarihi: evrak.evrakTarihi
+      }
+    };
+
+    current[evrak.name] = fileNode;
+  });
+
+  // Object'i array'e çevir (recursive)
+  function objectToArray(obj) {
+    return Object.values(obj)
+      .map(node => {
+        if (node.type === 'folder') {
+          node.children = objectToArray(node.children);
+        }
+        return node;
+      })
+      .filter(node => node.type); // Sadece valid node'lar
+  }
+
+  return objectToArray(root);
 }
 
 /**
