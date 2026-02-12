@@ -1,0 +1,18 @@
+Gizlilik Politikası - UYAP Evrak İndirici
+
+Son Güncelleme: Şubat 2026
+
+1. Toplanan Veriler
+   Bu uzantı hiçbir kişisel veriyi toplamaz, saklamaz veya üçüncü taraflarla paylaşmaz.
+
+2. İzinler
+   - activeTab: Yalnızca UYAP Vatandaş Portalı sayfasında evrak listesini okumak için kullanılır.
+   - storage: Kullanıcı tercihlerini (indirme gecikmesi gibi) yerel olarak saklamak için kullanılır.
+
+3. Veri İşleme
+   - Tüm işlemler tarayıcı içinde yerel olarak gerçekleştirilir.
+   - Hiçbir veri harici sunuculara gönderilmez.
+   - İndirilen dosyalar doğrudan kullanıcının bilgisayarına kaydedilir.
+
+4. İletişim
+   Sorularınız için: [e-posta adresi]
