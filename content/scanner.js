@@ -118,15 +118,18 @@ function getDosyaBilgileri() {
 /**
  * Tooltip'ten metadata çıkar
  * UYAP evrak metadata'yı data-original-title attribute'unda saklar
- * Format: "Birim Evrak No: 12345<br>Onay Tarihi: 15.01.2024<br>..."
+ * Format: <div>Birim Evrak No: 7319</div><div>Onay Tarihi: 06/02/2026</div>...
+ * Eski format desteği: key: value<br>key: value
  */
 function parseTooltip(tooltip) {
   const result = {};
   if (!tooltip) return result;
 
-  const lines = tooltip.split(/<br\s*\/?>|\n/gi);
+  const lines = tooltip.split(/<\/?div[^>]*>|<br\s*\/?>|\n/gi);
   for (const line of lines) {
     const clean = line.replace(/<[^>]*>/g, '').trim();
+    if (!clean) continue;
+
     const colonIndex = clean.indexOf(':');
     if (colonIndex === -1) continue;
 
@@ -189,8 +192,8 @@ function scanFiletree() {
           evrakId,
           name,
           relativePath: currentPath,
-          evrakTuru: metadata['Evrak Türü'] || '',
-          evrakTarihi: metadata['Evrak Tarihi'] || ''
+          evrakTuru: metadata['Türü'] || metadata['Evrak Türü'] || '',
+          evrakTarihi: metadata['Evrakın Onaylandığı Tarih'] || metadata['Onay Tarihi'] || metadata['Evrak Tarihi'] || ''
         });
       }
     });
