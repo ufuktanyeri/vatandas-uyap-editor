@@ -65,6 +65,15 @@
     bindEvents();
     observeModal();
 
+    AppState.onReset = () => {
+      UI.renderEvraklar();
+      UI.updateStats('<p>Başlatmak için <strong>Dosyaları Tara</strong> butonuna tıklayın.</p>');
+      UI.showMode('scan');
+
+      const fab = document.getElementById('uyap-ext-fab');
+      if (fab) fab.classList.remove('uyap-ext-fab--pulse');
+    };
+
     // Beforeunload cleanup
     window.addEventListener('beforeunload', () => {
       cleanupObservers();

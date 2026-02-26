@@ -125,12 +125,12 @@ export default [
     },
   },
 
-  // state.js -- consumes constants + UI (coupling!)
+  // state.js -- consumes constants only (UI coupling removed via onReset callback)
   {
     files: ['content/state.js'],
     languageOptions: {
       ...langBase,
-      globals: { ...browserGlobals, ...constantsExports, UI: 'readonly' },
+      globals: { ...browserGlobals, ...constantsExports },
     },
     rules: {
       ...sharedRules,

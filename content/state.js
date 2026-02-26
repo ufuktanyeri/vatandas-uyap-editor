@@ -1,9 +1,15 @@
 /**
  * state.js - Uygulama durumu
  * Kaynak: v2/src/store/signals.ts (reactive olmayan vanilla JS versiyonu)
+ *
+ * Callback'ler: UI etkileşimi main.js tarafından onReset ile bağlanır.
+ * State modülü hiçbir UI modülünü doğrudan çağırmaz.
  */
 
 const AppState = {
+  // Reset callback — main.js tarafından atanır
+  onReset: null,
+
   // Taranan evraklar
   evraklar: [],
 
@@ -193,7 +199,6 @@ const AppState = {
 
   // Durumu sıfırla
   reset() {
-    // State cleanup
     this.evraklar = [];
     this.seciliEvrakIds = new Set();
     this.treeData = null;
@@ -206,14 +211,7 @@ const AppState = {
     this.kisiAdi = '';
     this.initialized = false;
 
-    // UI cleanup
-    UI.renderEvraklar(); // Body'yi temizler
-    UI.updateStats('<p>Başlatmak için <strong>Dosyaları Tara</strong> butonuna tıklayın.</p>');
-    UI.showMode('scan');
-
-    // FAB pulse efektini kaldır
-    const fab = document.getElementById('uyap-ext-fab');
-    if (fab) fab.classList.remove('uyap-ext-fab--pulse');
+    if (this.onReset) this.onReset();
 
     console.log('[UYAP-EXT] State reset complete');
   }
