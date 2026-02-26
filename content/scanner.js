@@ -222,7 +222,7 @@ function buildTreeFromFlat(flatList) {
       : [];
 
     let current = root;
-    let currentPath = [];
+    const currentPath = [];
 
     // Klasörleri oluştur
     pathParts.forEach(folderName => {

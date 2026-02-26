@@ -1,3 +1,6 @@
+# Dependencies
+node_modules/
+
 # MCP server config (API key'ler içerebilir)
 .cursor/mcp.json
 

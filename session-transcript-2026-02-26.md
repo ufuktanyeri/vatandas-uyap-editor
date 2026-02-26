@@ -2,17 +2,20 @@
 
 **Proje:** UYAP Evrak İndirici (Chrome Extension, Manifest V3)
 **Tarih:** Perşembe, 26 Şubat 2026
-**Kapsam:** Kod kalitesi değerlendirmesi, sürdürülebilirlik, D3 kod haritası, yazılım yönetim stratejisi, MCP yapılandırması
+**Kapsam:** Kod kalitesi değerlendirmesi, sürdürülebilirlik, D3 kod haritası, yazılım yönetim stratejisi, MCP yapılandırması, GitHub repo kurulumu
 
 ---
 
 ## Oturum Özeti
 
-Bu oturumda proje 3 ana eksende değerlendirildi ve somut çıktılar üretildi:
+Bu oturumda proje 6 faz halinde değerlendirildi ve somut çıktılar üretildi:
 
 1. **Kod Kalitesi Değerlendirmesi** — Tüm kaynak dosyalar satır satır incelendi
 2. **D3 İnteraktif Kod Haritası** — Projenin modül/fonksiyon haritası görselleştirildi
 3. **Yazılım Yönetim Stratejisi + MCP Yapılandırması** — Scrumban metodolojisi ve araç entegrasyonu
+4. **GitHub PAT Token Yapılandırması** — Fine-grained token oluşturma rehberi ve güvenlik önerileri
+5. **GitHub Repo Kurulumu** — Remote bağlama, tüm geçmiş push, LICENSE, dev branch
+6. **Repo Metadata Kontrolü** — Topics, wiki, homepage eksikleri tespit edildi
 
 ---
 
@@ -172,13 +175,95 @@ Bu oturumda proje 3 ana eksende değerlendirildi ve somut çıktılar üretildi:
 
 ---
 
+## Faz 5: GitHub PAT Token Yapılandırması
+
+### Fine-Grained Token Yetki Önerisi
+
+Token 28 permission türünden sadece 3'ü ile oluşturuldu (minimum yetki prensibi):
+
+| Permission | Yetki | Gerekçe |
+|---|---|---|
+| **Contents** | Read and write | Repo dosyaları, branch, commit |
+| **Issues** | Read and write | Backlog yönetimi, bug tracking |
+| **Pull requests** | Read and write | PR oluşturma, inceleme, merge |
+| Metadata | Read-only | Otomatik verilir (zorunlu) |
+| Diğer 24 permission | **Seçilmedi** | Gereksiz, saldırı yüzeyini genişletir |
+
+**Expire date:** 90 gün önerisi verildi (sınırsız token önerilmez).
+
+### Tespit: `aylasenturk` Credential Sorunu
+
+Git credential manager'da başka bir hesap (`aylasenturk`) kayıtlı bulundu. Push işlemleri PAT token ile URL'e gömülerek yapıldı. Kalıcı çözüm: Windows Credential Manager'dan eski GitHub credential'ini silme.
+
+---
+
+## Faz 6: GitHub Repo Kurulumu
+
+**Hedef repo:** https://github.com/ufuktanyeri/vatandas-uyap-editor
+
+### Yapılan İşlemler
+
+| İşlem | Durum |
+|---|---|
+| `safe.directory` eklendi (dubious ownership hatası çözüldü) | Tamamlandı |
+| 5 yeni dosya commit edildi (code-map, strateji, gitignore, transkript, tree view) | Tamamlandı |
+| Remote `vatandas-uyap-addon-modern-ui` → `vatandas-uyap-editor` değiştirildi | Tamamlandı |
+| 7 commit'lik tüm geçmiş force push edildi | Tamamlandı |
+| MIT LICENSE dosyası eklendi ve push edildi | Tamamlandı |
+| `dev` branch oluşturuldu ve push edildi | Tamamlandı |
+| Remote URL'den PAT token temizlendi (güvenlik) | Tamamlandı |
+
+### Tespit Edilen Eksikler (Manuel Gerekli)
+
+PAT token'da `Administration` yetkisi olmadığı için aşağıdaki işlemler GitHub web arayüzünden yapılmalı:
+
+- [ ] **Topics ekle:** `chrome-extension`, `uyap`, `javascript`, `manifest-v3`, `document-downloader`, `vanilla-js`, `browser-extension`
+- [ ] **Wiki kapat:** Settings > Features > Wikis
+- [ ] **Homepage ayarla:** `https://vatandas.uyap.gov.tr`
+
+### Son Git Durumu
+
+```
+Branches: main (varsayılan), dev (aktif geliştirme)
+Remote: https://github.com/ufuktanyeri/vatandas-uyap-editor.git
+Commits: 7 (tümü push edildi)
+Tracked files: 19
+Son commit: docs: MIT lisansi ekle
+```
+
+---
+
+## Oturumda Oluşturulan Dosyalar
+
+| Dosya | Tür | Boyut |
+|-------|-----|-------|
+| `code-map.html` | D3 interaktif görselleştirme | 412 satır |
+| `.cursor/rules/software-management.mdc` | Cursor rule (always active) | 154 satır |
+| `.cursor/mcp.json` | MCP server yapılandırması | 18 satır |
+| `.gitignore` | Git ignore kuralları | 11 satır |
+| `LICENSE` | MIT lisansı | 21 satır |
+| `session-transcript-2026-02-26.md` | Bu transkript | — |
+
+---
+
 ## Açık Aksiyonlar
 
-Aşağıdaki maddeler bu oturumda tanımlanmış ancak henüz uygulanmamış aksiyonlardır. Detaylar için ilgili faz bölümüne bakın.
+### Tamamlanan Aksiyonlar
+- [x] Git repo initialize, remote bağla, kod push et
+- [x] LICENSE (MIT) ekle
+- [x] `dev` branch oluştur (branching stratejisi)
+- [x] GitHub PAT token yapılandır (Contents, Issues, Pull requests)
+- [x] `.gitignore` ile hassas dosyaları koru
 
-### Altyapı (Yapılandırma)
-- [ ] MCP API key'lerini yapılandır ve Cursor'u yeniden başlat
-- [ ] Git repo'yu initialize et, branching stratejisini uygula
+### Altyapı — Manuel Gerekli
+- [ ] GitHub repo topics ekle (web arayüzünden)
+- [ ] GitHub wiki kapat (web arayüzünden)
+- [ ] GitHub homepage ayarla (web arayüzünden)
+- [ ] MCP Task Master AI için ANTHROPIC_API_KEY yapılandır
+- [ ] Cursor'u yeniden başlat (MCP server aktivasyonu)
+- [ ] Windows Credential Manager'da `aylasenturk` credential'ini temizle
+
+### Altyapı — Kod
 - [ ] ESLint + Prettier yapılandırması ekle
 
 ### v2.1.0 — Kalite ve Kararlılık

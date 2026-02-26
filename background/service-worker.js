@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true; // Async response
 });
 
-async function handleMessage(message, sender) {
+async function handleMessage(message, _sender) {
   console.log('[UYAP-EXT] Background received:', message.type);
 
   switch (message.type) {

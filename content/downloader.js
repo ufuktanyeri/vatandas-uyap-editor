@@ -119,7 +119,7 @@ const Downloader = (() => {
 
       // Chrome downloads API ile otomatik indir (kullanıcı onayı gerektirmez)
       try {
-        const response = await chrome.runtime.sendMessage({
+        const downloadResponse = await chrome.runtime.sendMessage({
           type: 'DOWNLOAD_FILE',
           payload: {
             url: dataUrl,
@@ -127,8 +127,8 @@ const Downloader = (() => {
           }
         });
 
-        if (!response || !response.success) {
-          throw new Error(response?.error || 'Background download failed');
+        if (!downloadResponse || !downloadResponse.success) {
+          throw new Error(downloadResponse?.error || 'Background download failed');
         }
 
         console.log(`[UYAP-EXT] Downloaded: ${fileName}`);
@@ -138,7 +138,7 @@ const Downloader = (() => {
           fileName,
           mimeType,
           fileSize: arrayBuffer.byteLength,
-          downloadId: response.downloadId
+          downloadId: downloadResponse.downloadId
         };
       } catch (downloadError) {
         // Fallback: eski blob method (kullanıcı onayı gerektirir)
