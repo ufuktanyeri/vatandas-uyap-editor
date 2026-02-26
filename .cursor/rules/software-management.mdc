@@ -1,0 +1,153 @@
+---
+description: UYAP Evrak İndirici projesinin yazılım yönetim stratejisi, geliştirme süreçleri ve kalite standartları.
+globs:
+alwaysApply: true
+---
+
+# Yazılım Yönetim Stratejisi
+
+## Metodoloji: Scrumban (Scrum + Kanban Hibrit)
+
+Bu proje tek geliştirici / küçük ekip tarafından sürdürülen bir Chrome uzantısıdır.
+Ağır Scrum seremonileri gereksizdir; Waterfall ise iteratif geliştirmeye uygun değildir.
+**Scrumban** — Kanban'ın akış odaklı yapısı + Scrum'dan seçilmiş pratikler — idealdir.
+
+### Neden Scrumban?
+
+| Kriter | Waterfall | Scrum | Kanban | Scrumban |
+|--------|-----------|-------|--------|----------|
+| Küçük ekip uyumu | Düşük | Orta | Yüksek | Yüksek |
+| Seremoni yükü | Yok | Yüksek | Yok | Düşük |
+| Değişime uyum | Düşük | Orta | Yüksek | Yüksek |
+| Teslim sıklığı | Tek seferde | Sprint sonları | Sürekli | Sürekli |
+| Planlama disiplini | Yüksek | Orta | Düşük | Orta |
+
+### Uygulanan Pratikler
+
+**Kanban'dan:**
+- WIP (Work In Progress) limiti: Aynı anda en fazla 2 aktif iş
+- Sürekli akış: Sprint yerine sürekli teslim
+- Görsel board: Backlog → In Progress → Review → Done
+
+**Scrum'dan:**
+- 2 haftalık review döngüsü (retrospektif)
+- Definition of Done (DoD) checklist
+- User story formatında gereksinim tanımlama
+
+## Geliştirme Süreci
+
+### 1. İş Tanımlama (Backlog)
+
+Her yeni özellik veya düzeltme şu formatta tanımlanır:
+
+```
+[TİP] Başlık
+Açıklama: ...
+Kabul Kriterleri:
+  - [ ] Kriter 1
+  - [ ] Kriter 2
+Öncelik: P0 | P1 | P2
+Etkilenen Dosyalar: ...
+```
+
+Tip etiketleri: `[FEAT]` yeni özellik, `[FIX]` hata düzeltme, `[REFACTOR]` yeniden yapılandırma, `[DOCS]` dokümantasyon, `[PERF]` performans
+
+### 2. Branching Stratejisi (Git Flow Lite)
+
+```
+main (kararlı, yayınlanabilir)
+  └── dev (aktif geliştirme)
+       ├── feat/xxx (özellik dalları)
+       ├── fix/xxx (hata düzeltme dalları)
+       └── refactor/xxx (yeniden yapılandırma)
+```
+
+- `main` her zaman Chrome Web Store'a yüklenebilir durumda olmalı
+- `dev` üzerinde aktif geliştirme yapılır
+- Özellik dalları `dev`'den ayrılır, `dev`'e merge edilir
+- `dev` → `main` merge yalnızca sürüm çıkarılırken yapılır
+
+### 3. Commit Mesajı Formatı
+
+```
+tip(kapsam): açıklama
+
+feat(scanner): sayfalama desteği ekle
+fix(downloader): session expired retry döngüsünü düzelt
+refactor(state): UI coupling'i kaldır
+style(panel.css): tree view renklerini CSS değişkenlerine taşı
+docs(readme): kurulum adımlarını güncelle
+perf(downloader): base64 yerine blob URL kullan
+```
+
+### 4. Definition of Done (DoD)
+
+Bir iş "Tamamlandı" sayılmadan önce:
+
+- [ ] Kod çalışır durumda (Chrome'da manuel test)
+- [ ] Mevcut işlevsellik bozulmamış (regresyon kontrolü)
+- [ ] UYAP DOM'u değiştirilmemiş (kısıt kontrolü)
+- [ ] console.error yok (DevTools temiz)
+- [ ] Commit mesajı formata uygun
+- [ ] CLAUDE.md güncel (mimari değişiklik varsa)
+
+### 5. Sürüm Yönetimi (Semantic Versioning)
+
+```
+MAJOR.MINOR.PATCH
+  │      │     └── Hata düzeltmeleri, küçük iyileştirmeler
+  │      └──────── Yeni özellikler (geriye uyumlu)
+  └─────────────── Kırılma değişiklikleri (manifest, API değişikliği)
+```
+
+Sürüm çıkarma:
+1. `manifest.json` version güncelle
+2. CHANGELOG.md'ye giriş ekle
+3. `dev` → `main` merge
+4. Git tag: `v2.1.0`
+
+## Kalite Kontrol
+
+### Kod İnceleme Kontrol Listesi
+
+Yeni kod yazılırken veya incelenirken şu noktalar kontrol edilir:
+
+1. **Kapsülleme**: Global scope'a yeni isim eklenmiyor mu?
+2. **Coupling**: Modüller arası doğrudan erişim yerine callback/parametre kullanılıyor mu?
+3. **XSS**: innerHTML kullanılıyorsa escapeHtml() uygulanmış mı?
+4. **Bellek**: Blob URL'ler, observer'lar, listener'lar temizleniyor mu?
+5. **UYAP uyumluluğu**: DOM değiştirilmiyor mu? jQuery event'leri bozulmuyor mu?
+6. **WAF**: İndirme gecikmesi korunuyor mu?
+7. **CSS**: `.uyap-ext-` prefix kullanılmış mı? CSS değişkenleri mi kullanılmış?
+
+### Teknik Borç Takibi
+
+Teknik borçlar `// TECH-DEBT:` etiketi ile işaretlenir:
+
+```javascript
+// TECH-DEBT: base64 yerine blob URL kullanılmalı (bellek optimizasyonu)
+const dataUrl = `data:${mimeType};base64,${base64Data}`;
+```
+
+## Yol Haritası (Roadmap)
+
+### v2.1.0 — Kalite ve Kararlılık
+- ESLint + Prettier yapılandırması
+- State-UI coupling'i kırma (observer pattern)
+- Downloader'ı pure hale getirme
+- CSS hardcode renklerini değişkenlere taşıma
+
+### v2.2.0 — Performans
+- base64 yerine blob URL indirme stratejisi
+- Eski grup rendering kodunu kaldırma
+- Global scope temizleme (IIFE sarmalama)
+
+### v2.3.0 — Test ve Dokümantasyon
+- Birim test altyapısı (pure fonksiyonlar)
+- JSDoc type annotations
+- CHANGELOG.md başlatma
+
+### v3.0.0 — Gelişmiş Özellikler (Gelecek)
+- Çoklu sayfa desteği (pagination)
+- İndirme kuyruğu önceliklendirme
+- Klasör yapısı koruma (keepFolderStructure)

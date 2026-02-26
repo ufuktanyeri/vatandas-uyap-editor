@@ -1,0 +1,13 @@
+# MCP server config (API key'ler içerebilir)
+.cursor/mcp.json
+
+# Local settings
+settings.local.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+*.swp
+*.swo
