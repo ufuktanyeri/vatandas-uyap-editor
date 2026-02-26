@@ -34,6 +34,12 @@ const Downloader = (() => {
     if (matchBytes(header, MAGIC_BYTES.PDF)) {
       return { mimeType: MIME_TYPES.PDF, extension: FILE_EXTENSIONS.PDF };
     }
+    if (matchBytes(header, MAGIC_BYTES.PNG)) {
+      return { mimeType: MIME_TYPES.PNG, extension: FILE_EXTENSIONS.PNG };
+    }
+    if (matchBytes(header, MAGIC_BYTES.JPEG)) {
+      return { mimeType: MIME_TYPES.JPEG, extension: FILE_EXTENSIONS.JPEG };
+    }
     if (matchBytes(header, MAGIC_BYTES.ZIP)) {
       return { mimeType: MIME_TYPES.UDF, extension: FILE_EXTENSIONS.UDF };
     }
@@ -78,11 +84,11 @@ const Downloader = (() => {
    * Tek bir evrakı indir
    */
   async function downloadSingle(evrak, dosya) {
-    const yargiTuru = getYargiTuru();
-    const url = `${UYAP_BASE_URL}/${DOWNLOAD_ENDPOINT}` +
-      `?evrakId=${evrak.evrakId}` +
-      `&dosyaId=${dosya.dosyaId}` +
-      `&yargiTuru=${yargiTuru}`;
+    const endpoint = getDownloadEndpoint(dosya.yargiTuru);
+    const url = `${UYAP_BASE_URL}/${endpoint}` +
+      `?evrakId=${encodeURIComponent(evrak.evrakId)}` +
+      `&dosyaId=${encodeURIComponent(dosya.dosyaId)}` +
+      `&yargiTuru=${encodeURIComponent(dosya.yargiTuru)}`;
 
     try {
       const response = await fetch(url, {
@@ -231,26 +237,28 @@ const Downloader = (() => {
      * @param {Function} onProgress - Progress callback ({evrakId, status, error})
      * @param {Function} onSessionExpired - Session expired callback
      * @param {boolean} useSimpleMode - true ise window.downloadDoc() kullan
+     * @returns {{completed, failed, total, sessionExpired}}
      */
     async downloadAll(evraklar, dosya, settings, onProgress, onSessionExpired, useSimpleMode) {
       abortController = new AbortController();
       isPaused = false;
       currentIndex = 0;
 
+      let completed = 0;
+      let failed = 0;
+      let sessionExpired = false;
+
       for (let i = 0; i < evraklar.length; i++) {
-        // Pause kontrolü
         while (isPaused && abortController && !abortController.signal.aborted) {
           await sleep(TIMEOUTS.PAUSE_CHECK_INTERVAL);
         }
 
-        // İptal kontrolü
         if (abortController && abortController.signal.aborted) {
           console.log('[UYAP-EXT] Download cancelled');
           break;
         }
 
-        // Session kontrolü
-        if (AppState.sessionExpired) {
+        if (sessionExpired) {
           console.log('[UYAP-EXT] Session expired, stopping downloads');
           if (onSessionExpired) onSessionExpired();
           break;
@@ -259,7 +267,6 @@ const Downloader = (() => {
         const evrak = evraklar[i];
         currentIndex = i;
 
-        // Progress: downloading
         if (onProgress) {
           onProgress({ evrakId: evrak.evrakId, status: 'downloading', current: i + 1, total: evraklar.length });
         }
@@ -273,12 +280,17 @@ const Downloader = (() => {
         }
 
         if (result.sessionExpired) {
-          AppState.sessionExpired = true;
+          sessionExpired = true;
           if (onSessionExpired) onSessionExpired();
           break;
         }
 
-        // Progress: completed/failed
+        if (result.success) {
+          completed++;
+        } else {
+          failed++;
+        }
+
         if (onProgress) {
           onProgress({
             evrakId: evrak.evrakId,
@@ -289,19 +301,12 @@ const Downloader = (() => {
           });
         }
 
-        // WAF koruması - sonraki indirmeden önce bekle
         if (i < evraklar.length - 1) {
           await sleep(settings.downloadDelay || DEFAULT_SETTINGS.downloadDelay);
         }
       }
 
-      // Return download results
-      return {
-        completed: AppState.stats.completed,
-        failed: AppState.stats.failed,
-        total: evraklar.length,
-        sessionExpired: AppState.sessionExpired
-      };
+      return { completed, failed, total: evraklar.length, sessionExpired };
     },
 
     pause() {
