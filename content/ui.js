@@ -418,7 +418,7 @@ const UI = (() => {
         break;
 
       case 'select':
-        if (scanBtn) scanBtn.style.display = '';
+        if (scanBtn) { scanBtn.style.display = ''; scanBtn.disabled = false; }
         if (selectionActions) selectionActions.style.display = '';
         if (downloadActions) downloadActions.style.display = '';
         if (modeRow) modeRow.style.display = '';

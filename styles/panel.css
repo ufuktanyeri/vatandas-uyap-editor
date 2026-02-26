@@ -71,8 +71,8 @@
 /* Scrollbar */
 .uyap-ext-panel ::-webkit-scrollbar { width: 6px; }
 .uyap-ext-panel ::-webkit-scrollbar-track { background: transparent; }
-.uyap-ext-panel ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-.uyap-ext-panel ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.uyap-ext-panel ::-webkit-scrollbar-thumb { background: var(--uyap-color-text-tertiary); border-radius: 3px; }
+.uyap-ext-panel ::-webkit-scrollbar-thumb:hover { background: var(--uyap-color-text-secondary); }
 
 /* ===== FAB ===== */
 @keyframes uyap-fab-enter {
@@ -163,6 +163,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .uyap-ext-drawer--open {
@@ -193,7 +194,7 @@
 .uyap-ext-panel__title {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--uyap-color-text-primary);
   margin: 0;
 }
 
@@ -226,12 +227,12 @@
   background: var(--uyap-color-bg-gray-50);
   border-bottom: 1px solid var(--uyap-color-border-gray);
   font-size: 13px;
-  color: #4b5563;
+  color: var(--uyap-color-text-secondary);
   flex-shrink: 0;
 }
 
 .uyap-ext-panel__stats p { margin: 0; line-height: 1.6; }
-.uyap-ext-panel__stats strong { color: #111827; font-weight: 600; }
+.uyap-ext-panel__stats strong { color: var(--uyap-color-text-primary); font-weight: 600; }
 
 /* Actions */
 .uyap-ext-panel__actions {
@@ -276,17 +277,17 @@
 
 .uyap-ext-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-.uyap-ext-btn--primary { background-color: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
-.uyap-ext-btn--primary:hover:not(:disabled) { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; }
+.uyap-ext-btn--primary { background-color: var(--uyap-color-primary) !important; color: var(--uyap-color-bg-white) !important; border-color: var(--uyap-color-primary) !important; }
+.uyap-ext-btn--primary:hover:not(:disabled) { background-color: var(--uyap-color-primary-hover) !important; border-color: var(--uyap-color-primary-hover) !important; }
 
-.uyap-ext-btn--secondary { background-color: #fff !important; color: #374151 !important; border-color: #d1d5db !important; }
-.uyap-ext-btn--secondary:hover:not(:disabled) { background-color: #f9fafb !important; border-color: #9ca3af !important; }
+.uyap-ext-btn--secondary { background-color: var(--uyap-color-bg-white) !important; color: var(--uyap-color-text-primary) !important; border-color: var(--uyap-color-border-gray) !important; }
+.uyap-ext-btn--secondary:hover:not(:disabled) { background-color: var(--uyap-color-bg-gray-50) !important; border-color: var(--uyap-color-text-tertiary) !important; }
 
-.uyap-ext-btn--warning { background-color: #d97706 !important; color: #fff !important; border-color: #d97706 !important; }
-.uyap-ext-btn--warning:hover:not(:disabled) { background-color: #b45309 !important; }
+.uyap-ext-btn--warning { background-color: var(--uyap-color-warning) !important; color: var(--uyap-color-bg-white) !important; border-color: var(--uyap-color-warning) !important; }
+.uyap-ext-btn--warning:hover:not(:disabled) { background-color: var(--uyap-color-warning-hover) !important; }
 
-.uyap-ext-btn--danger { background-color: #dc2626 !important; color: #fff !important; border-color: #dc2626 !important; }
-.uyap-ext-btn--danger:hover:not(:disabled) { background-color: #b91c1c !important; }
+.uyap-ext-btn--danger { background-color: var(--uyap-color-error) !important; color: var(--uyap-color-bg-white) !important; border-color: var(--uyap-color-error) !important; }
+.uyap-ext-btn--danger:hover:not(:disabled) { background-color: var(--uyap-color-error-hover) !important; }
 
 .uyap-ext-btn--sm { padding: 4px 12px; font-size: 12px; }
 .uyap-ext-btn--full { width: 100%; }
@@ -388,14 +389,14 @@
   align-items: center;
   padding: 8px 12px;
   gap: 8px;
-  background: #f9fafb;
+  background: var(--uyap-color-bg-gray-50);
   cursor: pointer;
   transition: background-color 0.1s;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--uyap-color-border-gray);
 }
 
 .uyap-ext-tree-header:hover {
-  background: #f3f4f6;
+  background: var(--uyap-color-bg-gray-100);
 }
 
 /* Toggle icon */
@@ -405,7 +406,7 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  color: #6b7280;
+  color: var(--uyap-color-text-secondary);
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -422,11 +423,11 @@
 .uyap-ext-tree-icon {
   font-size: 16px;
   flex-shrink: 0;
-  color: #6b7280;
+  color: var(--uyap-color-text-secondary);
 }
 
 .uyap-ext-tree-node--folder .uyap-ext-tree-icon {
-  color: #f59e0b;
+  color: var(--uyap-color-folder);
 }
 
 /* Tree name */
@@ -434,7 +435,7 @@
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--uyap-color-text-primary);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -444,8 +445,8 @@
 /* File count badge */
 .uyap-ext-tree-count {
   font-size: 11px;
-  color: #6b7280;
-  background: white;
+  color: var(--uyap-color-text-secondary);
+  background: var(--uyap-color-bg-white);
   padding: 2px 6px;
   border-radius: 10px;
   font-weight: 500;
@@ -463,12 +464,12 @@
   align-items: flex-start;
   padding: 8px 12px 8px 32px;
   gap: 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--uyap-color-border-gray);
   transition: background-color 0.1s;
 }
 
 .uyap-ext-tree-node--file:hover {
-  background: #f9fafb;
+  background: var(--uyap-color-bg-gray-50);
 }
 
 /* File checkbox */
@@ -486,24 +487,24 @@
 
 .uyap-ext-tree-file-name {
   font-size: 13px;
-  color: #374151;
+  color: var(--uyap-color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   margin: 0 0 2px 0;
 }
 
-/* Metadata (evrak türü, tarih) */
+/* Metadata (evrak türü, tarih) — WCAG AA min 4.5:1 contrast */
 .uyap-ext-tree-node--file .uyap-ext-card__meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--uyap-color-text-secondary);
 }
 
 .uyap-ext-tree-node--file .uyap-ext-card__meta span {
-  background: #f3f4f6;
+  background: var(--uyap-color-bg-gray-100);
   padding: 2px 6px;
   border-radius: 3px;
 }
@@ -597,7 +598,7 @@
 
 .uyap-ext-alert__message {
   font-size: 13px;
-  color: #b91c1c;
+  color: var(--uyap-color-error-hover);
   margin: 0;
   line-height: 1.5;
 }

@@ -105,8 +105,21 @@ function getDosyaBilgileri() {
     return null;
   }
 
-  const dosyaNoMatch = document.body.innerHTML.match(/Dosya\s+No\s*:?\s*([^\s<]+)/i);
-  const dosyaNo = dosyaNoMatch ? dosyaNoMatch[1] : '';
+  let dosyaNo = '';
+
+  // textContent is safe from HTML tag/attribute content bleeding
+  const resultEl = document.querySelector(SELECTORS.EVRAK_RESULT);
+  if (resultEl) {
+    const match = resultEl.textContent.match(/Dosya\s+No\s*:\s*(\S+)/i);
+    if (match) dosyaNo = match[1];
+  }
+
+  if (!dosyaNo) {
+    const modalEl = document.querySelector(SELECTORS.MODAL);
+    const searchRoot = modalEl || document.body;
+    const match = searchRoot.textContent.match(/Dosya\s+No\s*:\s*([\w/-]+)/i);
+    if (match) dosyaNo = match[1];
+  }
 
   return {
     dosyaId,
@@ -184,16 +197,17 @@ function scanFiletree() {
         if (seen.has(evrakId)) return;
         seen.add(evrakId);
 
-        // Tooltip metadata
-        const tooltip = span.getAttribute('data-original-title');
+        // Bootstrap moves title→data-original-title on init; fallback to title if not yet initialized
+        const tooltip = span.getAttribute('data-original-title') || span.getAttribute('title') || '';
         const metadata = parseTooltip(tooltip);
 
         evraklar.push({
           evrakId,
           name,
           relativePath: currentPath,
-          evrakTuru: metadata['Türü'] || metadata['Evrak Türü'] || '',
-          evrakTarihi: metadata['Evrakın Onaylandığı Tarih'] || metadata['Onay Tarihi'] || metadata['Evrak Tarihi'] || ''
+          evrakTuru: metadata['Türü'] || metadata['Evrak Türü'] || metadata['Belge Türü'] || '',
+          evrakTarihi: metadata['Evrakın Onaylandığı Tarih'] || metadata['Onay Tarihi']
+            || metadata['Evrak Tarihi'] || metadata['Tarih'] || metadata['Kayıt Tarihi'] || ''
         });
       }
     });
@@ -244,7 +258,7 @@ function buildTreeFromFlat(flatList) {
       current = current[folderName].children;
     });
 
-    // Dosyayı ekle
+    // evrakId as key to prevent same-name collisions within a folder
     const fileNode = {
       type: 'file',
       name: evrak.name,
@@ -258,7 +272,7 @@ function buildTreeFromFlat(flatList) {
       }
     };
 
-    current[evrak.name] = fileNode;
+    current[`__file_${evrak.evrakId}`] = fileNode;
   });
 
   // Object'i array'e çevir (recursive)
