@@ -227,8 +227,84 @@ PAT token'da `Administration` yetkisi olmadığı için aşağıdaki işlemler G
 Branches: main (varsayılan), dev (aktif geliştirme)
 Remote: https://github.com/ufuktanyeri/vatandas-uyap-editor.git
 Commits: 7 (tümü push edildi)
-Tracked files: 19
 Son commit: docs: MIT lisansi ekle
+```
+
+---
+
+## Faz 7: ESLint + Prettier Yapılandırması
+
+### Oluşturulan Dosyalar
+
+| Dosya | Açıklama |
+|---|---|
+| `package.json` | v2.0.0, `type: "module"`, lint/format npm scriptleri, devDependencies |
+| `eslint.config.js` | ESLint v10 flat config, dosya bazlı global tanımları |
+| `.prettierrc` | Single quote, trailing comma ES5, printWidth 100, auto endOfLine |
+| `.prettierignore` | node_modules, icons, code-map.html |
+
+### Yüklenen Bağımlılıklar
+
+| Paket | Sürüm | Amaç |
+|---|---|---|
+| `eslint` | ^10.0.2 | Statik analiz |
+| `@eslint/js` | ^10.0.1 | ESLint önerilen kurallar |
+| `eslint-config-prettier` | ^10.1.8 | Prettier ile çakışan ESLint kurallarını devre dışı bırak |
+| `prettier` | ^3.8.1 | Kod formatlama |
+
+### ESLint Config Mimarisi
+
+Content script'lerin global scope paylaşımı nedeniyle dosya bazlı yapılandırma uygulandı:
+
+| Dosya | Görünen Globaller |
+|---|---|
+| `constants.js` | Yalnızca browser API'ları |
+| `scanner.js` | Browser + constants export'ları |
+| `downloader.js` | Browser + constants + scanner + AppState |
+| `state.js` | Browser + constants + UI |
+| `ui.js` | Browser + constants + AppState |
+| `main.js` | Browser + tüm modül export'ları |
+| `service-worker.js` | Yalnızca chrome API (ES module) |
+
+### Aktif Kurallar
+
+| Kural | Seviye | Açıklama |
+|---|---|---|
+| `no-undef` | error | Tanımsız değişken kullanımı engelle |
+| `no-eval` | error | eval() kullanımı engelle |
+| `no-implied-eval` | error | setTimeout("string") engelle |
+| `no-new-func` | error | new Function() engelle |
+| `no-alert` | error | alert() kullanımı engelle |
+| `no-var` | warn | var yerine let/const öner |
+| `prefer-const` | warn | Değişmeyen değişkenlerde const öner |
+| `eqeqeq` | warn | === kullanımını öner |
+| `no-shadow` | warn | Üst scope değişkenini gölgeleme uyarısı |
+| `no-redeclare` | error | Aynı isimde yeniden tanımlama engelle |
+| `curly` | warn | Çok satırlı bloklarda süslü parantez zorunlu |
+
+### Düzeltilen Uyarılar (3)
+
+| Dosya | Sorun | Çözüm |
+|---|---|---|
+| `service-worker.js:24` | `sender` unused parameter | `_sender` olarak yeniden adlandırıldı |
+| `downloader.js:122` | `response` iç scope'ta shadow | `downloadResponse` olarak yeniden adlandırıldı |
+| `scanner.js:225` | `let currentPath` asla reassign edilmiyor | `const currentPath` olarak değiştirildi |
+
+### Son Durum
+
+```
+npx eslint .  →  0 errors, 0 warnings
+Commit: feat(infra): ESLint + Prettier yapilandirmasi ekle, lint uyarilari duzelt
+Push: main → origin (başarılı)
+```
+
+### npm Scriptleri
+
+```bash
+npm run lint          # Hataları göster
+npm run lint:fix      # Otomatik düzelt
+npm run format        # Prettier ile formatla
+npm run format:check  # Format kontrolü
 ```
 
 ---
@@ -240,8 +316,12 @@ Son commit: docs: MIT lisansi ekle
 | `code-map.html` | D3 interaktif görselleştirme | 412 satır |
 | `.cursor/rules/software-management.mdc` | Cursor rule (always active) | 154 satır |
 | `.cursor/mcp.json` | MCP server yapılandırması | 18 satır |
-| `.gitignore` | Git ignore kuralları | 11 satır |
+| `.gitignore` | Git ignore kuralları | 14 satır |
 | `LICENSE` | MIT lisansı | 21 satır |
+| `package.json` | NPM yapılandırması | 35 satır |
+| `eslint.config.js` | ESLint flat config | 155 satır |
+| `.prettierrc` | Prettier kuralları | 9 satır |
+| `.prettierignore` | Prettier ignore | 4 satır |
 | `session-transcript-2026-02-26.md` | Bu transkript | — |
 
 ---
@@ -252,8 +332,10 @@ Son commit: docs: MIT lisansi ekle
 - [x] Git repo initialize, remote bağla, kod push et
 - [x] LICENSE (MIT) ekle
 - [x] `dev` branch oluştur (branching stratejisi)
-- [x] GitHub PAT token yapılandır (Contents, Issues, Pull requests)
-- [x] `.gitignore` ile hassas dosyaları koru
+- [x] GitHub PAT token yapılandır (Contents, Issues, Pull requests — 90 gün expire)
+- [x] `.gitignore` ile hassas dosyaları koru (mcp.json, settings.local.json, node_modules)
+- [x] ESLint + Prettier yapılandırması ekle (0 error, 0 warning)
+- [x] 3 lint uyarısını düzelt (unused param, shadow, prefer-const)
 
 ### Altyapı — Manuel Gerekli
 - [ ] GitHub repo topics ekle (web arayüzünden)
@@ -262,9 +344,6 @@ Son commit: docs: MIT lisansi ekle
 - [ ] MCP Task Master AI için ANTHROPIC_API_KEY yapılandır
 - [ ] Cursor'u yeniden başlat (MCP server aktivasyonu)
 - [ ] Windows Credential Manager'da `aylasenturk` credential'ini temizle
-
-### Altyapı — Kod
-- [ ] ESLint + Prettier yapılandırması ekle
 
 ### v2.1.0 — Kalite ve Kararlılık
 - [ ] `state.js` → `reset()` içindeki UI çağrılarını kaldır, `main.js`'de callback ile bağla

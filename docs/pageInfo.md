@@ -1,0 +1,154 @@
+```json
+{
+  "page": {
+    "title": "UYAP VATANDAŞ BİLGİ SİSTEMİ",
+    "url": "https://vatandas.uyap.gov.tr/main/jsp/vatandas/index.jsp?menuId=12573",
+    "meta": {
+      "charset": "utf-8",
+      "http-equiv:X-UA-Compatible": "IE=edge,chrome=1",
+      "viewport": "width=device-width, initial-scale=1",
+      "description": "",
+      "author": "",
+      "googlebot": "noindex"
+    }
+  },
+  "libraries": {
+    "jquery": "1.11.2",
+    "jqueryUI": "1.11.2",
+    "jqueryMigrate": "1.2.1",
+    "bootstrap": "3.3.5",
+    "angular": "yok",
+    "react": "yok",
+    "fontAwesome": {
+      "loaded": true,
+      "version": "belirlenemedi",
+      "linkHref": "https://vatandas.uyap.gov.tr/assets/global/plugins/font-awesome/css/font-awesome.min.css"
+    }
+  },
+  "selectors": {
+    "filetree": {
+      "exists": true,
+      "tagName": "UL",
+      "id": "browser",
+      "className": "filetree treeview-gray treeview",
+      "topLevelLiCount": 1
+    },
+    "modal": {
+      "exists": true,
+      "tagName": "DIV",
+      "classes": "modal fade bs-modal-lg in",
+      "visible": true,
+      "hasShowClass": false,
+      "hasInClass": true,
+      "display": "block",
+      "visibility": "visible",
+      "childElementCount": 1,
+      "offsetWidth": 673,
+      "offsetHeight": 651
+    },
+    "fileSpans": {
+      "count": 299,
+      "sampleIds": ["13524110242", "13524095996", "13522007682"]
+    },
+    "folderSpans": {
+      "count": 67,
+      "sampleNames": [
+        "Antalya Bölge Adliye Mahkemesi 2. Hukuk Dairesi 2023/3135",
+        "Dosyaya Eklenen Son 20 Evrak",
+        "Tüm Evraklar",
+        "2023/3135 (Hukuk Dava Dosyası)",
+        "Temyiz Formu (1)"
+      ]
+    },
+    "yargiTuru": {
+      "exists": true,
+      "value": "1",
+      "selectedText": "Hukuk",
+      "options": [
+        {"value": "0", "text": "Ceza"},
+        {"value": "1", "text": "Hukuk"},
+        {"value": "2", "text": "İcra"},
+        {"value": "5", "text": "Adli Tıp"},
+        {"value": "6", "text": "İdari Yargı"},
+        {"value": "11", "text": "Satış Memurluğu"},
+        {"value": "25", "text": "Arabuluculuk"},
+        {"value": "26", "text": "Tazminat Komisyonu Başkanlığı"}
+      ]
+    },
+    "username": {
+      "exists": true,
+      "className": "username username-hide-on-mobile theme-font",
+      "text": "NURTEN YAVUZ"
+    },
+    "dosyaEvrakBilgileriResult": {
+      "exists": true,
+      "tagName": "DIV",
+      "childElementCount": 5
+    }
+  },
+  "filetreeStruktur": {
+    "maxNestingDepth": 5,
+    "topLevelLiCount": 1,
+    "hasSon20Evrak": true,
+    "son20EvrakText": "Dosyaya Eklenen Son 20 Evrak",
+    "rootFolderName": "Antalya Bölge Adliye Mahkemesi 2. Hukuk Dairesi 2023/3135"
+  },
+  "evrakDetail": {
+    "sampleEvrakId": "13524110242",
+    "attributes": {
+      "class": "file",
+      "data-placement": "auto",
+      "data-html": "true",
+      "title": "",
+      "ce": "V",
+      "evrak_id": "13524110242",
+      "data-original-title": "<div>Birim Evrak No: 7319</div><div>Evrakın Onaylandığı Tarih : 06/02/2026</div><div>Gönderen Yer/Kişi: Isparta Mahkemeler Veznesi</div><div>Gönderen Dosya No: 2021/612</div><div>Gönderen Sayı: 2021/612</div><div>Sisteme Gönderildiği Tarih: 06/02/2026</div><div>Açıklama: </div><div>Türü: Reddiyat Banka Ödeme Dekontu</div><div>Tipi: DOSYA</div>"
+    },
+    "tooltip": "HTML içerikli — Birim Evrak No, Onay Tarihi, Gönderen Yer/Kişi, Dosya No, Sayı, Sisteme Gönderilme Tarihi, Açıklama, Tür, Tip",
+    "jqueryEvents": ["focusin", "focusout", "mouseover", "mouseout", "dblclick", "contextmenu", "click"]
+  },
+  "downloadDoc": {
+    "exists": true,
+    "type": "function",
+    "signature": "function(evrakId, dosyaId, yargiTuru) { downloadDocCustom({evrakId: evrakId, dosyaId: dosyaId, yargiTuru: yargiTuru}); }",
+    "parameters": ["evrakId", "dosyaId", "yargiTuru"],
+    "delegates_to": "downloadDocCustom(values)",
+    "downloadDocCustom": {
+      "exists": true,
+      "type": "function",
+      "params": "values",
+      "bodyLength": 119
+    }
+  },
+  "dosyaBilgileri": {
+    "dosyaId": "795506918",
+    "dosyaIdSource": "inline script — dosyaId = 795506918",
+    "yargiTuru": "1",
+    "yargiTuruText": "Hukuk",
+    "dosyaNo": null
+  },
+  "security": {
+    "cookieLength": 199,
+    "cspMetaTag": false,
+    "scriptCount": 201,
+    "externalScripts": 165,
+    "inlineScripts": 36,
+    "stylesheetCount": 58
+  },
+  "performance": {
+    "totalDomElements": 5103,
+    "fileSpanCount": 299,
+    "folderSpanCount": 67
+  },
+  "endpoints": {
+    "downloadBrd": false,
+    "uyapHrefsFound": [
+      "http://vatandas.uyap.gov.tr/main/destek/uyap-kullanim-kilavuzu-ve-yasanan-problemler.pdf",
+      "kill_session.uyap"
+    ],
+    "downloadAnchors": [],
+    "onclickDownloadHandlers": [],
+    "note": "download_document_brd.uyap DOM/inline script'lerde bulunamadı. İndirme AJAX/XHR ile dinamik tetikleniyor."
+  }
+}
+```
