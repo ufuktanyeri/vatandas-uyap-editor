@@ -1,0 +1,53 @@
+---
+description: Proje bağlamı ve mevcut durum — yeni oturumda kaldığımız yeri hatırlamak için.
+globs:
+alwaysApply: true
+---
+
+# Proje Bağlamı — UYAP Evrak İndirici
+
+## Mevcut Sürüm ve Durum
+
+- **Sürüm:** v2.1+ (manifest.json: 2.0.0, henüz güncellenmedi)
+- **Son commit:** `814b6d4` — test: add Vitest unit test infrastructure with 70 tests
+- **Repo:** https://github.com/ufuktanyeri/vatandas-uyap-editor
+- **Branch:** main (tüm geliştirme doğrudan main üzerinde yapılıyor — henüz Git Flow Lite uygulanmadı)
+
+## Tamamlanan Önemli Çalışmalar
+
+1. **State-UI decoupling** — AppState.onReset callback pattern ile UI bağımlılığı kaldırıldı
+2. **Downloader decoupling** — AppState erişimi parametreye çevrildi, dinamik endpoint routing eklendi
+3. **XSS koruma** — escapeHtml() constants.js'e taşındı, tüm stats HTML escape edildi
+4. **CSS değişkenleri** — Tree view + diğer tüm hardcoded hex renkler CSS değişkenlerine taşındı
+5. **Multi-dosya context tracking** — dosyaGecmisi Map, oturumStats, saveDosyaContext/restoreDosyaContext
+6. **Birim test altyapısı** — Vitest + jsdom, 70 test (constants: 31, scanner: 17, state: 22)
+7. **Yargı türü desteği** — Tüm yargiTuru'ler için doğru endpoint routing (0,1,2,3,5,6,11,25,26,kvk)
+
+## Bekleyen Görevler (Öncelik Sırasıyla)
+
+Detaylar: `docs/todo-by-prompt.md`
+
+1. **#3 Eski Flat Rendering Temizliği** — ui.js/main.js/state.js'deki ölü fallback kodu
+2. **#4 IIFE Global Scope Temizliği** — constants.js + scanner.js'i IIFE'ye sarmala
+3. **#2 Blob URL İndirme Geçişi** — base64 yerine blob URL (bellek %33 tasarruf)
+4. **#8 Scanner innerHTML** — findDosyaId() hâlâ innerHTML kullanıyor
+5. **#10 SW Promise Wrapper** — service-worker.js callback→native Promise
+6. **#11 DOCX vs UDF** — ZIP magic bytes sonrası Content_Types kontrolü
+7. **#9 JSDoc** — Tüm dosyalara type annotation
+8. **#12 CHANGELOG.md** — Keep a Changelog formatında başlat
+
+## Test Çalıştırma
+
+```
+npm test          # Vitest run (tek sefer)
+npm run test:watch # Vitest watch mode
+npm run lint       # ESLint
+```
+
+## Kritik Hatırlatmalar
+
+- Content script'ler global scope, modül sistemi yok — test setup `vm.runInThisContext` ile yüklüyor
+- UYAP DOM'una dokunma — jQuery event'leri bağlı, DOM değişikliği UYAP'ı bozar
+- Downloader IIFE internal fonksiyonları (detectFileType vb.) henüz test edilmiyor
+- escapeHtml() çift tırnak escape etmez (textContent+innerHTML yaklaşımı, beklenen davranış)
+- WAF koruması: indirmeler arası minimum 300ms gecikme zorunlu
