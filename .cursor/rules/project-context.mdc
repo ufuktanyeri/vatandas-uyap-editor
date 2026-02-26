@@ -9,7 +9,7 @@ alwaysApply: true
 ## Mevcut Sürüm ve Durum
 
 - **Sürüm:** v2.1+ (manifest.json: 2.0.0, henüz güncellenmedi)
-- **Son commit:** `814b6d4` — test: add Vitest unit test infrastructure with 70 tests
+- **Son commit:** `b5040d8` — docs: add session start/end prompts for context continuity
 - **Repo:** https://github.com/ufuktanyeri/vatandas-uyap-editor
 - **Branch:** main (tüm geliştirme doğrudan main üzerinde yapılıyor — henüz Git Flow Lite uygulanmadı)
 
