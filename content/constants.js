@@ -7,11 +7,12 @@
 const UYAP_BASE_URL = 'https://vatandas.uyap.gov.tr';
 
 // yargiTuru → download endpoint mapping (Application.getDownloadURL aynalama)
+// Not: UYAP İcra türü için "danistay" adlı endpoint kullanır (UYAP isimlendirme tutarsızlığı)
 const DOWNLOAD_ENDPOINTS = {
-  DEFAULT: 'download_document_brd.uyap',
+  DEFAULT: 'download_document_brd.uyap',              // 0,1,5,6,11,25,26 ve diğerleri
   DANISTAY: 'download_document_danistay_brd.uyap',   // yargiTuru=2 (İcra)
-  YARGITAY: 'download_document_yargitay_brd.uyap',   // yargiTuru=3
-  KVK: 'kvkEvrakDownloadDocument_brd.uyap',           // yargiTuru=kvk
+  YARGITAY: 'download_document_yargitay_brd.uyap',   // yargiTuru=3 (Yargıtay)
+  KVK: 'kvkEvrakDownloadDocument_brd.uyap',           // yargiTuru=kvk (KVK)
 };
 
 /**
@@ -81,16 +82,19 @@ const DEFAULT_SETTINGS = {
 // Varsayılan yargı türü
 const DEFAULT_YARGI_TURU = '1'; // Hukuk
 
-// Yargı türleri referans tablosu (#yargiTuru select options)
+// Yargı türleri referans tablosu
+// Select options (0,1,2,5,6,11,25,26) + endpoint-only türler (3, kvk)
 const YARGI_TURLERI = {
   '0': 'Ceza',
   '1': 'Hukuk',
   '2': 'İcra',
+  '3': 'Yargıtay',
   '5': 'Adli Tıp',
   '6': 'İdari Yargı',
   '11': 'Satış Memurluğu',
   '25': 'Arabuluculuk',
-  '26': 'Tazminat Komisyonu Başkanlığı'
+  '26': 'Tazminat Komisyonu Başkanlığı',
+  'kvk': 'Kişisel Verilerin Korunması'
 };
 
 // Retry konfigürasyonu
