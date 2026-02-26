@@ -5,14 +5,35 @@
 
 // UYAP endpoint'leri
 const UYAP_BASE_URL = 'https://vatandas.uyap.gov.tr';
-const DOWNLOAD_ENDPOINT = 'download_document_brd.uyap';
+
+// yargiTuru → download endpoint mapping (Application.getDownloadURL aynalama)
+const DOWNLOAD_ENDPOINTS = {
+  DEFAULT: 'download_document_brd.uyap',
+  DANISTAY: 'download_document_danistay_brd.uyap',   // yargiTuru=2 (İcra)
+  YARGITAY: 'download_document_yargitay_brd.uyap',   // yargiTuru=3
+  KVK: 'kvkEvrakDownloadDocument_brd.uyap',           // yargiTuru=kvk
+};
+
+/**
+ * UYAP Application.getDownloadURL mantığını aynalar
+ * @param {string} yargiTuru
+ * @returns {string} endpoint path
+ */
+function getDownloadEndpoint(yargiTuru) {
+  if (yargiTuru === 'kvk') return DOWNLOAD_ENDPOINTS.KVK;
+  if (yargiTuru === '2') return DOWNLOAD_ENDPOINTS.DANISTAY;
+  if (yargiTuru === '3') return DOWNLOAD_ENDPOINTS.YARGITAY;
+  return DOWNLOAD_ENDPOINTS.DEFAULT;
+}
 
 // Magic bytes - dosya tipi tespiti
 const MAGIC_BYTES = {
   PDF: [0x25, 0x50, 0x44, 0x46],       // %PDF
-  ZIP: [0x50, 0x4B, 0x03, 0x04],       // PK.. (UDF)
+  ZIP: [0x50, 0x4B, 0x03, 0x04],       // PK.. (UDF/DOCX)
   TIFF_LE: [0x49, 0x49, 0x2A, 0x00],   // II*.
   TIFF_BE: [0x4D, 0x4D, 0x00, 0x2A],   // MM.*
+  PNG: [0x89, 0x50, 0x4E, 0x47],       // .PNG
+  JPEG: [0xFF, 0xD8, 0xFF],            // JFIF/Exif
 };
 
 // MIME types
@@ -20,6 +41,8 @@ const MIME_TYPES = {
   PDF: 'application/pdf',
   UDF: 'application/zip',
   TIFF: 'image/tiff',
+  PNG: 'image/png',
+  JPEG: 'image/jpeg',
   HTML: 'text/html',
   UNKNOWN: 'application/octet-stream'
 };
@@ -29,6 +52,8 @@ const FILE_EXTENSIONS = {
   PDF: '.pdf',
   UDF: '.udf',
   TIFF: '.tiff',
+  PNG: '.png',
+  JPEG: '.jpg',
   HTML: '.html'
 };
 
@@ -55,6 +80,18 @@ const DEFAULT_SETTINGS = {
 
 // Varsayılan yargı türü
 const DEFAULT_YARGI_TURU = '1'; // Hukuk
+
+// Yargı türleri referans tablosu (#yargiTuru select options)
+const YARGI_TURLERI = {
+  '0': 'Ceza',
+  '1': 'Hukuk',
+  '2': 'İcra',
+  '5': 'Adli Tıp',
+  '6': 'İdari Yargı',
+  '11': 'Satış Memurluğu',
+  '25': 'Arabuluculuk',
+  '26': 'Tazminat Komisyonu Başkanlığı'
+};
 
 // Retry konfigürasyonu
 const RETRY_CONFIG = {
@@ -100,4 +137,15 @@ function sanitizeName(name) {
     .replace(/\s+/g, ' ')                       // Çoklu boşluklar
     .replace(/^[\s.]+|[\s.]+$/g, '')            // Baş/son nokta ve boşluklar
     .substring(0, 200);                          // Uzunluk limiti
+}
+
+/**
+ * HTML özel karakterlerini escape et (XSS önleme)
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
