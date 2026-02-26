@@ -294,15 +294,15 @@
       // Stats güncelle
       let statsHtml = `<p><strong>${scanResult.flatList.length}</strong> evrak bulundu</p>`;
       if (dosya) {
-        statsHtml += `<p>Dosya ID: <strong>${dosya.dosyaId}</strong>`;
-        if (dosya.dosyaNo) statsHtml += ` | No: <strong>${dosya.dosyaNo}</strong>`;
+        statsHtml += `<p>Dosya ID: <strong>${escapeHtml(dosya.dosyaId)}</strong>`;
+        if (dosya.dosyaNo) statsHtml += ` | No: <strong>${escapeHtml(dosya.dosyaNo)}</strong>`;
         statsHtml += `</p>`;
       }
       if (pagination && pagination.hasMultiplePages) {
         statsHtml += `<p style="color:#d97706;">⚠ Sayfa ${pagination.currentPage}/${pagination.totalPages} - Sadece mevcut sayfa tarandı</p>`;
       }
       if (AppState.kisiAdi && AppState.kisiAdi !== 'Bilinmeyen') {
-        statsHtml += `<p>Kişi: <strong>${AppState.kisiAdi}</strong></p>`;
+        statsHtml += `<p>Kişi: <strong>${escapeHtml(AppState.kisiAdi)}</strong></p>`;
       }
       UI.updateStats(statsHtml);
 
@@ -318,7 +318,7 @@
 
     } catch (err) {
       console.error('[UYAP-EXT] Scan failed:', err);
-      UI.updateStats(`<p style="color:#dc2626;">⚠ Tarama başarısız: ${err.message}</p>`);
+      UI.updateStats(`<p style="color:#dc2626;">⚠ Tarama başarısız: ${escapeHtml(err.message)}</p>`);
       UI.showMode('scan');
     }
   }
@@ -341,11 +341,10 @@
     UI.showMode('downloading');
     UI.updateProgress(0, seciliEvraklar.length, 'downloading');
 
-    await Downloader.downloadAll(
+    const result = await Downloader.downloadAll(
       seciliEvraklar,
       AppState.dosyaBilgileri,
       AppState.settings,
-      // onProgress
       (progress) => {
         if (progress.status === 'completed') {
           AppState.stats.completed++;
@@ -356,25 +355,23 @@
         UI.updateProgress(progress.current, progress.total,
           AppState.downloadStatus === 'paused' ? 'paused' : 'downloading');
       },
-      // onSessionExpired
       () => {
+        AppState.sessionExpired = true;
         AppState.downloadStatus = 'error';
         UI.showSessionAlert();
         UI.updateProgress(AppState.stats.completed, AppState.stats.total, 'error');
         UI.showMode('completed');
       },
-      // useSimpleMode
       AppState.useSimpleMode
     );
 
-    // İndirme tamamlandı (iptal veya bitiş)
-    if (!AppState.sessionExpired) {
+    if (!result.sessionExpired) {
       AppState.downloadStatus = 'completed';
-      UI.updateProgress(AppState.stats.completed, AppState.stats.total, 'completed');
+      UI.updateProgress(result.completed, result.total, 'completed');
 
-      const statsHtml = `<p>${UI_MESSAGES.SUCCESS_ICON} <strong>${AppState.stats.completed}</strong> ${UI_MESSAGES.DOWNLOAD_COMPLETE}` +
-        (AppState.stats.failed > 0 ? `, <strong style="color:#dc2626;">${AppState.stats.failed}</strong> başarısız` : '') +
-        ` / ${AppState.stats.total} toplam</p>`;
+      const statsHtml = `<p>${UI_MESSAGES.SUCCESS_ICON} <strong>${result.completed}</strong> ${UI_MESSAGES.DOWNLOAD_COMPLETE}` +
+        (result.failed > 0 ? `, <strong style="color:#dc2626;">${result.failed}</strong> başarısız` : '') +
+        ` / ${result.total} toplam</p>`;
       UI.updateStats(statsHtml);
       UI.showMode('completed');
     }
