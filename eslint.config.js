@@ -34,7 +34,8 @@ const browserGlobals = {
 
 const constantsExports = {
   UYAP_BASE_URL: 'readonly',
-  DOWNLOAD_ENDPOINT: 'readonly',
+  DOWNLOAD_ENDPOINTS: 'readonly',
+  getDownloadEndpoint: 'readonly',
   MAGIC_BYTES: 'readonly',
   MIME_TYPES: 'readonly',
   FILE_EXTENSIONS: 'readonly',
@@ -42,11 +43,13 @@ const constantsExports = {
   SKIP_FOLDERS: 'readonly',
   DEFAULT_SETTINGS: 'readonly',
   DEFAULT_YARGI_TURU: 'readonly',
+  YARGI_TURLERI: 'readonly',
   RETRY_CONFIG: 'readonly',
   TIMEOUTS: 'readonly',
   UI_MESSAGES: 'readonly',
   STORAGE_KEYS: 'readonly',
   sanitizeName: 'readonly',
+  escapeHtml: 'readonly',
 };
 
 const scannerExports = {
@@ -106,7 +109,7 @@ export default [
     },
   },
 
-  // downloader.js -- consumes constants + scanner
+  // downloader.js -- consumes constants only (AppState + scanner coupling removed)
   {
     files: ['content/downloader.js'],
     languageOptions: {
@@ -114,8 +117,6 @@ export default [
       globals: {
         ...browserGlobals,
         ...constantsExports,
-        ...scannerExports,
-        AppState: 'readonly',
       },
     },
     rules: {
