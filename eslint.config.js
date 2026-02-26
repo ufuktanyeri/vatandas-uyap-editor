@@ -186,6 +186,27 @@ export default [
     },
   },
 
+  // Test files -- Vitest + ESM imports
+  {
+    files: ['tests/**/*.js', 'vitest.config.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...browserGlobals,
+        ...constantsExports,
+        ...scannerExports,
+        AppState: 'writable',
+        Downloader: 'readonly',
+        globalThis: 'readonly',
+      },
+    },
+    rules: {
+      ...sharedRules,
+      'no-unused-vars': 'off',
+    },
+  },
+
   prettier,
 
   {
