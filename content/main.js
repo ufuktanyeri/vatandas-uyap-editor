@@ -67,7 +67,9 @@
 
     AppState.onReset = () => {
       UI.renderEvraklar();
-      UI.updateStats('<p>Başlatmak için <strong>Dosyaları Tara</strong> butonuna tıklayın.</p>');
+      let resetHtml = '<p>Başlatmak için <strong>Dosyaları Tara</strong> butonuna tıklayın.</p>';
+      resetHtml += buildOturumStatsHtml();
+      UI.updateStats(resetHtml);
       UI.showMode('scan');
 
       const fab = document.getElementById('uyap-ext-fab');
@@ -252,6 +254,36 @@
     }
   }
 
+  // ===== OTURUM OZETI =====
+
+  /**
+   * Birden fazla dosya tarandi ise oturum gecmisi HTML'i olustur.
+   */
+  function buildOturumStatsHtml() {
+    const ozet = AppState.getOturumOzeti();
+    if (ozet.dosyalar.length === 0) return '';
+
+    let html = '<div class="uyap-ext-session-summary">';
+    html += `<p><i class="fa fa-history uyap-ext-icon-spacing-sm"></i>Oturum: <strong>${ozet.dosyalar.length}</strong> dosya`;
+    if (ozet.toplamIndirilen > 0) {
+      html += `, <strong>${ozet.toplamIndirilen}</strong> evrak indirildi`;
+    }
+    html += '</p>';
+
+    ozet.dosyalar.forEach(d => {
+      const durumIcon = d.indirilenSayisi > 0 ? UI_MESSAGES.SUCCESS_ICON : '';
+      const yargiLabel = d.yargiTuruAdi ? escapeHtml(d.yargiTuruAdi) : '';
+      const dosyaNo = d.dosyaNo ? escapeHtml(d.dosyaNo) : escapeHtml(d.dosyaId);
+      html += `<p class="uyap-ext-session-item">${durumIcon} ${yargiLabel} ${dosyaNo}: `;
+      html += `${d.indirilenSayisi}/${d.evrakSayisi} evrak`;
+      if (d.basarisizSayisi > 0) html += ` (${d.basarisizSayisi} başarısız)`;
+      html += '</p>';
+    });
+
+    html += '</div>';
+    return html;
+  }
+
   // ===== TARAMA =====
 
   async function handleScan() {
@@ -285,8 +317,19 @@
       const dosya = getDosyaBilgileri();
       AppState.dosyaBilgileri = dosya;
 
+      // Gecmis kontrolu — daha once taranan dosyaya donuluyor mu?
+      if (dosya) {
+        const gecmis = AppState.getDosyaGecmisi(dosya.dosyaId);
+        if (gecmis) {
+          AppState.restoreDosyaContext(dosya.dosyaId);
+          console.log('[UYAP-EXT] Returning to previously scanned dosya:', dosya.dosyaId);
+        }
+      }
+
       // Kişi adı
-      AppState.kisiAdi = findKisiAdi();
+      if (!AppState.kisiAdi) {
+        AppState.kisiAdi = findKisiAdi();
+      }
 
       // Tümünü seç (varsayılan)
       AppState.tumunuSec();
@@ -296,14 +339,18 @@
       if (dosya) {
         statsHtml += `<p>Dosya ID: <strong>${escapeHtml(dosya.dosyaId)}</strong>`;
         if (dosya.dosyaNo) statsHtml += ` | No: <strong>${escapeHtml(dosya.dosyaNo)}</strong>`;
+        const yargiAdi = YARGI_TURLERI[dosya.yargiTuru];
+        if (yargiAdi) statsHtml += ` | <strong>${escapeHtml(yargiAdi)}</strong>`;
         statsHtml += `</p>`;
       }
       if (pagination && pagination.hasMultiplePages) {
-        statsHtml += `<p style="color:#d97706;">⚠ Sayfa ${pagination.currentPage}/${pagination.totalPages} - Sadece mevcut sayfa tarandı</p>`;
+        statsHtml += `<p style="color:var(--uyap-color-warning);">⚠ Sayfa ${pagination.currentPage}/${pagination.totalPages} - Sadece mevcut sayfa tarandı</p>`;
       }
       if (AppState.kisiAdi && AppState.kisiAdi !== 'Bilinmeyen') {
         statsHtml += `<p>Kişi: <strong>${escapeHtml(AppState.kisiAdi)}</strong></p>`;
       }
+      // Oturum gecmisi ozeti (birden fazla dosya tarandi ise)
+      statsHtml += buildOturumStatsHtml();
       UI.updateStats(statsHtml);
 
       // Evrakları render et
@@ -348,6 +395,7 @@
       (progress) => {
         if (progress.status === 'completed') {
           AppState.stats.completed++;
+          AppState.downloadedEvrakIds.add(progress.evrakId);
         } else if (progress.status === 'failed') {
           AppState.stats.failed++;
           UI.showProgressError(`Hata: ${progress.error} (${progress.evrakId})`);
@@ -369,9 +417,10 @@
       AppState.downloadStatus = 'completed';
       UI.updateProgress(result.completed, result.total, 'completed');
 
-      const statsHtml = `<p>${UI_MESSAGES.SUCCESS_ICON} <strong>${result.completed}</strong> ${UI_MESSAGES.DOWNLOAD_COMPLETE}` +
-        (result.failed > 0 ? `, <strong style="color:#dc2626;">${result.failed}</strong> başarısız` : '') +
+      let statsHtml = `<p>${UI_MESSAGES.SUCCESS_ICON} <strong>${result.completed}</strong> ${UI_MESSAGES.DOWNLOAD_COMPLETE}` +
+        (result.failed > 0 ? `, <strong style="color:var(--uyap-color-error);">${result.failed}</strong> başarısız` : '') +
         ` / ${result.total} toplam</p>`;
+      statsHtml += buildOturumStatsHtml();
       UI.updateStats(statsHtml);
       UI.showMode('completed');
     }
@@ -438,7 +487,10 @@
           if (fab) fab.classList.add('uyap-ext-fab--pulse');
         } else if (!visible && AppState.initialized) {
           console.log('[UYAP-EXT] UYAP modal closed');
-          AppState.reset();
+          if (AppState.dosyaBilgileri) {
+            AppState.saveDosyaContext();
+          }
+          AppState.resetActiveDosya();
         }
       }, TIMEOUTS.MUTATION_DEBOUNCE);
     });

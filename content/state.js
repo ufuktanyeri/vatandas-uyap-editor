@@ -53,6 +53,18 @@ const AppState = {
   // Açık klasörler (Set of full paths)
   expandedFolders: new Set(),
 
+  // Multi-dosya: aktif dosyada indirilen evrak ID'leri
+  downloadedEvrakIds: new Set(),
+
+  // Multi-dosya: oturum boyunca dosya gecmisi (dosyaId -> context)
+  dosyaGecmisi: new Map(),
+
+  // Multi-dosya: oturum geneli istatistikler
+  oturumStats: {
+    toplamIndirilen: 0,
+    toplamBasarisiz: 0
+  },
+
   // Evrakları klasörlere göre grupla
   getGroupedEvraklar() {
     const groups = new Map();
@@ -197,8 +209,112 @@ const AppState = {
     return count;
   },
 
-  // Durumu sıfırla
-  reset() {
+  /**
+   * Mevcut dosyanin indirme gecmisini kaydet.
+   * Modal kapanmadan once cagirilir.
+   */
+  saveDosyaContext() {
+    if (!this.dosyaBilgileri || !this.dosyaBilgileri.dosyaId) return;
+
+    const dosyaId = this.dosyaBilgileri.dosyaId;
+    const existing = this.dosyaGecmisi.get(dosyaId);
+
+    const downloadedIds = existing
+      ? new Set([...existing.downloadedEvrakIds, ...this.downloadedEvrakIds])
+      : new Set(this.downloadedEvrakIds);
+
+    const completedCount = existing
+      ? existing.stats.completed + this.stats.completed
+      : this.stats.completed;
+    const failedCount = existing
+      ? existing.stats.failed + this.stats.failed
+      : this.stats.failed;
+
+    this.dosyaGecmisi.set(dosyaId, {
+      dosyaBilgileri: { ...this.dosyaBilgileri },
+      downloadedEvrakIds: downloadedIds,
+      stats: { total: this.evraklar.length, completed: completedCount, failed: failedCount },
+      evrakSayisi: this.evraklar.length,
+      yargiTuruAdi: YARGI_TURLERI[this.dosyaBilgileri.yargiTuru] || this.dosyaBilgileri.yargiTuru
+    });
+
+    this._recalcOturumStats();
+    console.log(`[UYAP-EXT] Dosya context saved: ${dosyaId} (${downloadedIds.size} downloaded)`);
+  },
+
+  /**
+   * Daha once taranan bir dosyanin indirme gecmisini restore et.
+   * @returns {boolean} gecmis bulundu mu
+   */
+  restoreDosyaContext(dosyaId) {
+    const gecmis = this.dosyaGecmisi.get(dosyaId);
+    if (!gecmis) return false;
+
+    this.downloadedEvrakIds = new Set(gecmis.downloadedEvrakIds);
+    console.log(`[UYAP-EXT] Dosya context restored: ${dosyaId} (${this.downloadedEvrakIds.size} previously downloaded)`);
+    return true;
+  },
+
+  /**
+   * Belirli bir dosya icin gecmis dondur.
+   */
+  getDosyaGecmisi(dosyaId) {
+    return this.dosyaGecmisi.get(dosyaId) || null;
+  },
+
+  /**
+   * Herhangi bir dosyada bu evrak daha once indirilmis mi?
+   */
+  isEvrakDownloaded(evrakId) {
+    if (this.downloadedEvrakIds.has(evrakId)) return true;
+    for (const [, ctx] of this.dosyaGecmisi) {
+      if (ctx.downloadedEvrakIds.has(evrakId)) return true;
+    }
+    return false;
+  },
+
+  /**
+   * Oturum istatistiklerini dosyaGecmisi'nden yeniden hesapla.
+   */
+  _recalcOturumStats() {
+    let toplamIndirilen = 0;
+    let toplamBasarisiz = 0;
+    for (const [, ctx] of this.dosyaGecmisi) {
+      toplamIndirilen += ctx.stats.completed;
+      toplamBasarisiz += ctx.stats.failed;
+    }
+    this.oturumStats.toplamIndirilen = toplamIndirilen;
+    this.oturumStats.toplamBasarisiz = toplamBasarisiz;
+  },
+
+  /**
+   * Oturum genelinde islenen dosya listesini dondur.
+   */
+  getOturumOzeti() {
+    const dosyalar = [];
+    for (const [dosyaId, ctx] of this.dosyaGecmisi) {
+      dosyalar.push({
+        dosyaId,
+        dosyaNo: ctx.dosyaBilgileri.dosyaNo,
+        yargiTuru: ctx.dosyaBilgileri.yargiTuru,
+        yargiTuruAdi: ctx.yargiTuruAdi,
+        evrakSayisi: ctx.evrakSayisi,
+        indirilenSayisi: ctx.stats.completed,
+        basarisizSayisi: ctx.stats.failed
+      });
+    }
+    return {
+      dosyalar,
+      toplamIndirilen: this.oturumStats.toplamIndirilen,
+      toplamBasarisiz: this.oturumStats.toplamBasarisiz
+    };
+  },
+
+  /**
+   * Aktif dosya state'ini temizle.
+   * Dosya gecmisi ve oturum istatistikleri korunur.
+   */
+  resetActiveDosya() {
     this.evraklar = [];
     this.seciliEvrakIds = new Set();
     this.treeData = null;
@@ -208,11 +324,24 @@ const AppState = {
     this.stats = { total: 0, completed: 0, failed: 0 };
     this.sessionExpired = false;
     this.pagination = null;
-    this.kisiAdi = '';
+    this.downloadedEvrakIds = new Set();
     this.initialized = false;
 
     if (this.onReset) this.onReset();
 
-    console.log('[UYAP-EXT] State reset complete');
+    console.log('[UYAP-EXT] Active dosya reset (history preserved)');
+  },
+
+  /**
+   * Tam sifirlama — oturum sonu veya sayfa yenileme.
+   * Dosya gecmisi dahil her sey temizlenir.
+   */
+  reset() {
+    this.resetActiveDosya();
+    this.dosyaGecmisi = new Map();
+    this.oturumStats = { toplamIndirilen: 0, toplamBasarisiz: 0 };
+    this.kisiAdi = '';
+
+    console.log('[UYAP-EXT] Full state reset complete');
   }
 };

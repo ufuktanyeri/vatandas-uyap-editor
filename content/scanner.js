@@ -46,12 +46,18 @@ function findDosyaId() {
 
 /**
  * yargiTuru'nü fallback zinciriyle al
- * 1. jQuery event handler
- * 2. #yargiTuru select element
+ * 1. #yargiTuru select element (en guvenilir — kullanicinin secimi)
+ * 2. jQuery event handler (fallback — hardcoded olabilir!)
  * 3. Varsayılan: "1" (Hukuk)
  */
 function getYargiTuru() {
-  // Fallback 1: jQuery event handler parse
+  // Oncelik 1: Select element (kullanicinin aktif secimi)
+  const selectEl = document.querySelector(SELECTORS.YARGI_TURU_SELECT);
+  if (selectEl && selectEl.value && selectEl.value.trim() !== '') {
+    return selectEl.value.trim();
+  }
+
+  // Oncelik 2: jQuery event handler parse (dblclick handler hardcoded olabilir)
   try {
     const fileSpan = document.querySelector('span.file[evrak_id]');
     if (fileSpan && typeof window.jQuery !== 'undefined') {
@@ -68,13 +74,7 @@ function getYargiTuru() {
     console.warn('[UYAP-EXT] jQuery yargiTuru parse failed:', err);
   }
 
-  // Fallback 2: Select element
-  const selectEl = document.querySelector(SELECTORS.YARGI_TURU_SELECT);
-  if (selectEl && selectEl.value && selectEl.value.trim() !== '') {
-    return selectEl.value.trim();
-  }
-
-  // Fallback 3: Varsayılan
+  // Oncelik 3: Varsayılan
   return DEFAULT_YARGI_TURU;
 }
 
