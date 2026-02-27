@@ -344,7 +344,7 @@
         statsHtml += `</p>`;
       }
       if (pagination && pagination.hasMultiplePages) {
-        statsHtml += `<p style="color:var(--uyap-color-warning);">⚠ Sayfa ${pagination.currentPage}/${pagination.totalPages} - Sadece mevcut sayfa tarandı</p>`;
+        statsHtml += `<p style="color:var(--uyap-color-warning);">⚠ Sayfa ${escapeHtml(String(pagination.currentPage))}/${escapeHtml(String(pagination.totalPages))} - Sadece mevcut sayfa tarandı</p>`;
       }
       if (AppState.kisiAdi && AppState.kisiAdi !== 'Bilinmeyen') {
         statsHtml += `<p>Kişi: <strong>${escapeHtml(AppState.kisiAdi)}</strong></p>`;
