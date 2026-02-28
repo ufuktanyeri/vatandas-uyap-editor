@@ -40,8 +40,8 @@
 <body>
 
 <header>
-  <h1>UYAP Evrak İndirici v2.1 — Kod Haritası</h1>
-  <p>Interaktif D3 indented tree · Düğümlere tıklayarak açıp kapatabilirsiniz · Son güncelleme: 26 Şubat 2026</p>
+  <h1>UYAP Evrak İndirici v2.1.0 — Kod Haritası</h1>
+  <p>Interaktif D3 indented tree · Düğümlere tıklayarak açıp kapatabilirsiniz · Son güncelleme: 27 Şubat 2026</p>
 </header>
 
 <div class="legend">
@@ -65,7 +65,7 @@ const treeData = {
       name: "manifest.json",
       meta: "32 satır · Giriş noktası",
       health: "green",
-      tip: "Manifest V3 yapılandırması. permissions: activeTab, storage, downloads. Content scripts sıralı yüklenir.",
+      tip: "Manifest V3 yapılandırması. permissions: activeTab, storage, downloads. Content scripts sıralı yüklenir. v2.1.0 güncel.",
       children: [
         { name: "permissions", meta: "activeTab, storage, downloads", health: "green", tip: "Minimum yetki prensibi uygulanmış." },
         { name: "content_scripts", meta: "6 JS + 1 CSS, document_idle", health: "green", tip: "Yükleme sırası: constants → scanner → downloader → state → ui → main" },
@@ -74,47 +74,47 @@ const treeData = {
     },
     {
       name: "content/",
-      meta: "6 dosya · ~1,968 satır",
+      meta: "6 dosya · ~2,167 satır",
       health: "group",
       children: [
         {
           name: "constants.js",
-          meta: "152 satır · Düşük karmaşıklık",
+          meta: "156 satır · Düşük karmaşıklık",
           health: "green",
-          tip: "Sabitler, konfigürasyon ve utility fonksiyonlar. Coupling yok. Global scope'a ~23 değişken yayar. v2.1: Dinamik endpoint routing, PNG/JPEG desteği, escapeHtml eklendi.",
+          tip: "Sabitler, konfigürasyon ve utility fonksiyonlar. Coupling yok. Global scope'a ~18 değişken yayar (IIFE sarma bekliyor). escapeHtml() burada tanımlı.",
           children: [
             { name: "UYAP_BASE_URL", meta: "const string", health: "green", tip: "UYAP base URL sabiti" },
-            { name: "DOWNLOAD_ENDPOINTS", meta: "const object · v2.1", health: "green", tip: "yargiTuru → endpoint mapping: DEFAULT, DANISTAY (İcra), YARGITAY, KVK. Application.getDownloadURL aynalaması." },
-            { name: "getDownloadEndpoint()", meta: "function · pure · v2.1", health: "green", tip: "yargiTuru parametresine göre doğru download endpoint döner. UYAP'ın Application.getDownloadURL mantığını aynalar." },
-            { name: "MAGIC_BYTES", meta: "const object", health: "green", tip: "PDF, ZIP, TIFF_LE, TIFF_BE, PNG, JPEG magic byte dizileri. v2.1: PNG + JPEG eklendi." },
-            { name: "MIME_TYPES", meta: "const object", health: "green", tip: "PDF, UDF, TIFF, PNG, JPEG, HTML, UNKNOWN MIME tipleri" },
+            { name: "DOWNLOAD_ENDPOINTS", meta: "const object", health: "green", tip: "yargiTuru → endpoint mapping: DEFAULT, DANISTAY (İcra), YARGITAY, KVK. Application.getDownloadURL aynalaması." },
+            { name: "getDownloadEndpoint()", meta: "function · pure", health: "green", tip: "yargiTuru parametresine göre doğru download endpoint döner." },
+            { name: "MAGIC_BYTES", meta: "const object", health: "green", tip: "PDF, ZIP, TIFF_LE, TIFF_BE, PNG, JPEG magic byte dizileri." },
+            { name: "MIME_TYPES", meta: "const object", health: "green", tip: "PDF, UDF, TIFF, PNG, JPEG, HTML, UNKNOWN MIME tipleri. ZIP her zaman UDF olarak etiketleniyor (DOCX ayrımı bekliyor)." },
             { name: "FILE_EXTENSIONS", meta: "const object", health: "green", tip: ".pdf, .udf, .tiff, .png, .jpg, .html uzantıları" },
-            { name: "SELECTORS", meta: "const object", health: "green", tip: "UYAP DOM seçicileri: filetree, modal, yargiTuru, username, evrakResult vb." },
-            { name: "SKIP_FOLDERS", meta: "const array", health: "green", tip: "Atlanacak klasörler: 'Son 20 Evrak', 'Son20'" },
+            { name: "SELECTORS", meta: "const object", health: "green", tip: "UYAP DOM seçicileri. Canlı DOM analiziyle doğrulandı (27 Şubat 2026)." },
+            { name: "SKIP_FOLDERS", meta: "const array", health: "green", tip: "'Son 20 Evrak', 'Son20'. UYAP'ta 'Dosyaya Eklenen Son 20 Evrak' olarak geçiyor — includes() ile eşleşir." },
             { name: "DEFAULT_SETTINGS", meta: "const object", health: "green", tip: "downloadDelay: 300ms, autoRetry: true, keepFolderStructure: true" },
-            { name: "YARGI_TURLERI", meta: "const object · v2.1", health: "green", tip: "Yargı türleri referans tablosu (8 tür): Ceza, Hukuk, İcra, Adli Tıp, İdari Yargı, Satış Memurluğu, Arabuluculuk, Tazminat Komisyonu." },
+            { name: "YARGI_TURLERI", meta: "const object", health: "green", tip: "10 tür: 0-Ceza, 1-Hukuk, 2-İcra, 3-Yargıtay, 5-Adli Tıp, 6-İdari Yargı, 11-Satış Memurluğu, 25-Arabuluculuk, 26-Tazminat Komisyonu, kvk-KVK." },
             { name: "RETRY_CONFIG", meta: "const object", health: "green", tip: "MAX_RETRIES: 2, BASE_DELAY: 1s, DELAY_MULTIPLIER: 2" },
             { name: "TIMEOUTS", meta: "const object", health: "green", tip: "FILETREE_LOAD: 30s, MUTATION_DEBOUNCE: 150ms, POLLING: 500ms, BLOB_CLEANUP: 100ms, PAUSE_CHECK: 100ms" },
             { name: "UI_MESSAGES", meta: "const object", health: "green", tip: "Türkçe UI mesajları ve ikonlar" },
             { name: "STORAGE_KEYS", meta: "const object", health: "green", tip: "chrome.storage anahtarları" },
             { name: "sanitizeName()", meta: "function · pure", health: "green", tip: "Dosya adı temizleme: kontrol karakterleri, Windows geçersiz karakterler, uzunluk limiti 200" },
-            { name: "escapeHtml()", meta: "function · security · v2.1", health: "green", tip: "HTML özel karakterlerini escape et (XSS önleme). createElement + textContent → innerHTML. ui.js'ten taşındı, artık global." }
+            { name: "escapeHtml()", meta: "function · security", health: "green", tip: "HTML özel karakterlerini escape et (XSS önleme). createElement + textContent → innerHTML. Çift tırnak escape etmez (beklenen davranış)." }
           ]
         },
         {
           name: "scanner.js",
-          meta: "328 satır · Orta karmaşıklık",
+          meta: "342 satır · Orta karmaşıklık",
           health: "yellow",
-          tip: "DOM tarama ve evrak çıkarma. Recursive parse iyi. v2.1: Tooltip <div> desteği ve metadata key fallback eklendi. Hâlâ document.body.innerHTML regex kullanıyor (dezavantaj).",
+          tip: "DOM tarama ve evrak çıkarma. Tüm selector'lar canlı DOM ile doğrulandı. BUG: scanFiletree() hata dönüşü [] — {tree:[],flatList:[]} olmalı. findDosyaId() hâlâ innerHTML kullanıyor (window.dosyaId mevcut, geçiş bekliyor). Duplicate jQuery parsing kodu var.",
           children: [
-            { name: "findDosyaId()", meta: "function · DOM erişim", health: "yellow", tip: "2 fallback: (1) document.body.innerHTML regex (performans riski), (2) jQuery event handler parse." },
-            { name: "getYargiTuru()", meta: "function · 3 fallback", health: "green", tip: "jQuery handler → select element → varsayılan '1'. Savunmacı programlama iyi." },
-            { name: "findKisiAdi()", meta: "function · DOM erişim", health: "green", tip: "Header'dan kullanıcı adı çıkarma. sanitizeName() kullanır. 2 fallback." },
-            { name: "getDosyaBilgileri()", meta: "function · orchestrator", health: "yellow", tip: "dosyaId + dosyaNo + yargiTuru birleştirici. dosyaNo için document.body.innerHTML regex (performans riski)." },
-            { name: "parseTooltip()", meta: "function · pure · v2.1 FIX", health: "green", tip: "v2.1: <div> tag splitting desteği eklendi. Regex: /<\\/?div[^>]*>|<br\\s*\\/?>|\\n/gi. Hem eski <br> hem yeni <div> formatını destekler." },
-            { name: "scanFiletree()", meta: "function · recursive", health: "green", tip: "Ana tarama. parseNode() ile recursive DOM traversal. Set ile dedup. v2.1: Metadata key fallback zincirleri (Türü || Evrak Türü, Onay Tarihi || Evrak Tarihi)." },
-            { name: "buildTreeFromFlat()", meta: "function · transformer", health: "green", tip: "Flat list'ten nested tree yapısı. Object → Array dönüşümü. objectToArray() iç fonksiyon." },
-            { name: "detectPagination()", meta: "function · DOM regex", health: "green", tip: "Sayfalama tespiti: 'Toplam X sayfadan Y. sayfa' pattern." },
+            { name: "findDosyaId()", meta: "function · DOM erişim", health: "red", tip: "BUG: document.body.innerHTML regex (ağır). UYAP window.dosyaId global tanımlıyor — buna geçilmeli. Duplicate jQuery._data kodu getYargiTuru() ile paylaşılıyor." },
+            { name: "getYargiTuru()", meta: "function · 3 fallback", health: "green", tip: "1) #yargiTuru select element, 2) jQuery handler parse, 3) varsayılan '1'. UYAP DOM ile doğrulandı: select her zaman mevcut, 8 option." },
+            { name: "findKisiAdi()", meta: "function · DOM erişim", health: "green", tip: "Header'dan kullanıcı adı. UYAP DOM ile doğrulandı: .username.username-hide-on-mobile + #ad çalışıyor." },
+            { name: "getDosyaBilgileri()", meta: "function · orchestrator", health: "green", tip: "dosyaId + dosyaNo + yargiTuru birleştirici. textContent kullanımı güvenli." },
+            { name: "parseTooltip()", meta: "function · pure", health: "green", tip: "<div>Key: Value</div> format. UYAP DOM ile doğrulandı: data-original-title dolu, title boş." },
+            { name: "scanFiletree()", meta: "function · recursive", health: "yellow", tip: "BUG: Filetree bulunamazsa return [] — main.js crash eder. return {tree:[],flatList:[]} olmalı." },
+            { name: "buildTreeFromFlat()", meta: "function · transformer", health: "green", tip: "Flat→nested tree. evrakId key ile aynı isim çakışmasını önler." },
+            { name: "detectPagination()", meta: "function · DOM regex", health: "green", tip: "UYAP DOM ile doğrulandı: 'Toplam X sayfadan Y. sayfa gösteriliyor.' Navigasyon butonları: ul.pagination.bootpag." },
             { name: "waitForFiletree()", meta: "function · async polling", health: "green", tip: "Promise tabanlı DOM polling. Timeout kontrolü ile." }
           ]
         },
@@ -122,16 +122,16 @@ const treeData = {
           name: "downloader.js",
           meta: "341 satır · Orta karmaşıklık",
           health: "yellow",
-          tip: "İndirme motoru IIFE. v2.1: AppState coupling tamamen kaldırıldı — downloadAll() parametre alıp sonuç döner. Dinamik endpoint routing. encodeURIComponent. PNG/JPEG desteği. Kalan sorun: base64 data URL bellek overhead'ı.",
+          tip: "İndirme motoru IIFE. AppState coupling yok, parametrik API. Kalan sorunlar: base64 data URL bellek overhead'ı (%33), IIFE iç fonksiyonlar test edilemiyor, ZIP her zaman UDF.",
           children: [
-            { name: "detectFileType()", meta: "private · pure", health: "green", tip: "Magic bytes ile dosya tipi tespiti. v2.1: PNG ve JPEG desteği eklendi (ZIP'ten önce kontrol edilir)." },
+            { name: "detectFileType()", meta: "private · pure", health: "yellow", tip: "Magic bytes ile dosya tipi tespiti. ZIP her zaman UDF — DOCX ayrımı yok." },
             { name: "isHtmlResponse()", meta: "private · pure", health: "green", tip: "İlk 500 byte'ı TextDecoder ile kontrol. Session expired tespiti." },
-            { name: "arrayBufferToBase64()", meta: "private · pure", health: "yellow", tip: "Chunked base64 dönüşüm (8KB chunks). Büyük dosyalarda 1.33x RAM overhead. Blob URL'ye geçilmeli." },
+            { name: "arrayBufferToBase64()", meta: "private · pure", health: "yellow", tip: "Chunked base64 (8KB). 10MB PDF → 13MB string. Blob URL'ye geçilmeli." },
             { name: "sleep()", meta: "private · utility", health: "green", tip: "Promise tabanlı setTimeout wrapper." },
-            { name: "downloadSingle()", meta: "private · async · v2.1 FIX", health: "green", tip: "v2.1: getDownloadEndpoint(dosya.yargiTuru) ile dinamik endpoint. encodeURIComponent ile URL encoding. fetch + magic bytes + Chrome Downloads API + blob fallback." },
+            { name: "downloadSingle()", meta: "private · async", health: "green", tip: "Dinamik endpoint routing. fetch + magic bytes + Chrome Downloads API + blob fallback." },
             { name: "downloadWithRetry()", meta: "private · async", health: "green", tip: "Exponential backoff retry. Session expired ve iptal durumlarında retry yapmaz." },
             { name: "downloadSimple()", meta: "private · sync", health: "green", tip: "window.downloadDoc() wrapper. Basit mod fallback." },
-            { name: "downloadAll()", meta: "public · async · v2.1 REFACTOR", health: "green", tip: "v2.1: AppState erişimi tamamen kaldırıldı. Parametreler: (evraklar, dosya, settings, onProgress, onSessionExpired, useSimpleMode). Dönüş: {completed, failed, total, sessionExpired}." },
+            { name: "downloadAll()", meta: "public · async", health: "green", tip: "Parametreler: (evraklar, dosya, settings, onProgress, onSessionExpired, useSimpleMode). Dönüş: {completed, failed, total, sessionExpired}." },
             { name: "pause()", meta: "public", health: "green", tip: "isPaused = true" },
             { name: "resume()", meta: "public", health: "green", tip: "isPaused = false" },
             { name: "cancel()", meta: "public", health: "green", tip: "AbortController.abort()" },
@@ -142,71 +142,82 @@ const treeData = {
         },
         {
           name: "state.js",
-          meta: "219 satır · Orta karmaşıklık",
+          meta: "348 satır · Orta karmaşıklık",
           health: "green",
-          tip: "Uygulama durumu plain object. v2.1: UI coupling tamamen kaldırıldı — reset() artık onReset callback kullanır. Set tabanlı seçim yönetimi iyi. Tree state yönetimi temiz.",
+          tip: "Uygulama durumu plain object. UI coupling yok (onReset callback). Multi-dosya context tracking: dosyaGecmisi Map ile oturum boyunca indirme geçmişi. Kalan: 3 metot ölü kod (flat rendering fallback).",
           children: [
-            { name: "onReset", meta: "property · callback · v2.1", health: "green", tip: "v2.1: Reset callback. main.js tarafından atanır. State modülü artık UI'ı doğrudan çağırmaz." },
+            { name: "onReset", meta: "property · callback", health: "green", tip: "Reset callback. main.js tarafından atanır." },
             { name: "evraklar[]", meta: "property · array", health: "green", tip: "Taranan evrak listesi" },
             { name: "seciliEvrakIds", meta: "property · Set", health: "green", tip: "Seçili evrak ID'leri. O(1) lookup." },
             { name: "treeData", meta: "property · nested", health: "green", tip: "Ağaç yapısı verisi" },
             { name: "expandedFolders", meta: "property · Set", health: "green", tip: "Açık klasör path'leri" },
-            { name: "getGroupedEvraklar()", meta: "method · pure", health: "green", tip: "Evrakları klasörlere göre Map ile grupla." },
+            { name: "downloadedEvrakIds", meta: "property · Set", health: "green", tip: "Aktif dosyada indirilen evrak ID'leri" },
+            { name: "dosyaGecmisi", meta: "property · Map", health: "green", tip: "Multi-dosya: dosyaId → {dosyaBilgileri, downloadedEvrakIds, stats, evrakSayisi, yargiTuruAdi}" },
+            { name: "oturumStats", meta: "property · object", health: "green", tip: "Oturum geneli: toplamIndirilen, toplamBasarisiz" },
+            { name: "getGroupedEvraklar()", meta: "method · dead code", health: "yellow", tip: "Ölü kod: sadece eski flat rendering fallback tarafından kullanılıyor. T-1'de kaldırılacak." },
             { name: "toggleEvrakSecimi()", meta: "method · mutator", health: "green", tip: "Set add/delete toggle." },
             { name: "tumunuSec()", meta: "method · mutator", health: "green", tip: "Tüm evrak ID'lerini Set'e ekle." },
             { name: "secimiTemizle()", meta: "method · mutator", health: "green", tip: "Set'i sıfırla." },
-            { name: "klasorEvraklariniSec()", meta: "method · mutator", health: "green", tip: "Belirli klasörün evraklarını seç (eski grup sistemi)." },
-            { name: "klasorEvraklariniKaldir()", meta: "method · mutator", health: "green", tip: "Belirli klasörün seçimini kaldır (eski grup sistemi)." },
+            { name: "klasorEvraklariniSec()", meta: "method · dead code", health: "yellow", tip: "Ölü kod: sadece eski fallback. T-1'de kaldırılacak." },
+            { name: "klasorEvraklariniKaldir()", meta: "method · dead code", health: "yellow", tip: "Ölü kod: sadece eski fallback. T-1'de kaldırılacak." },
             { name: "getSeciliEvraklar()", meta: "method · getter", health: "green", tip: "Seçili evrakları filtrele ve döndür." },
             { name: "toggleFolderExpanded()", meta: "method · mutator", health: "green", tip: "Klasör açık/kapalı state toggle." },
-            { name: "findNodeByPath()", meta: "method · recursive search", health: "green", tip: "Tree'de fullPath ile node arama." },
+            { name: "findNodeByPath()", meta: "method · recursive", health: "green", tip: "Tree'de fullPath ile node arama." },
             { name: "selectAllInFolder()", meta: "method · recursive", health: "green", tip: "Klasördeki tüm dosyaları seç." },
             { name: "deselectAllInFolder()", meta: "method · recursive", health: "green", tip: "Klasördeki tüm seçimi kaldır." },
-            { name: "isFolderFullySelected()", meta: "method · recursive check", health: "green", tip: "Tüm dosyalar seçili mi? every() kontrolü." },
-            { name: "getFileCountInFolder()", meta: "method · recursive count", health: "green", tip: "Klasördeki toplam dosya sayısı." },
-            { name: "reset()", meta: "method · v2.1 REFACTOR", health: "green", tip: "v2.1: UI çağrıları kaldırıldı. Sadece state sıfırlama + onReset callback. Temiz separation of concerns." }
+            { name: "isFolderFullySelected()", meta: "method · recursive", health: "green", tip: "Tüm dosyalar seçili mi? every() kontrolü." },
+            { name: "getFileCountInFolder()", meta: "method · recursive", health: "green", tip: "Klasördeki toplam dosya sayısı." },
+            { name: "saveDosyaContext()", meta: "method · multi-dosya", health: "green", tip: "Mevcut dosyanın indirme geçmişini dosyaGecmisi Map'ine kaydet. Tekrar kaydetmelerde istatistikler biriktirilir." },
+            { name: "restoreDosyaContext()", meta: "method · multi-dosya", health: "green", tip: "Daha önce taranan dosyanın downloadedEvrakIds'ini geri yükle." },
+            { name: "getDosyaGecmisi()", meta: "method · getter", health: "green", tip: "Belirli dosya için geçmiş döndür." },
+            { name: "isEvrakDownloaded()", meta: "method · lookup", health: "green", tip: "Evrak herhangi bir dosyada indirilmiş mi? Tüm geçmişi kontrol eder." },
+            { name: "_recalcOturumStats()", meta: "method · private", health: "green", tip: "dosyaGecmisi'nden oturum istatistiklerini yeniden hesapla." },
+            { name: "getOturumOzeti()", meta: "method · getter", health: "green", tip: "Oturum genelinde işlenen dosya listesi ve istatistikler." },
+            { name: "resetActiveDosya()", meta: "method · partial reset", health: "green", tip: "Aktif dosya state'ini temizle, dosya geçmişi ve oturum stats korunur." },
+            { name: "reset()", meta: "method · full reset", health: "green", tip: "Tam sıfırlama: resetActiveDosya() + dosyaGecmisi + oturumStats + kisiAdi." }
           ]
         },
         {
           name: "ui.js",
-          meta: "457 satır · Yüksek karmaşıklık",
+          meta: "457 satır · Orta karmaşıklık",
           health: "yellow",
-          tip: "UI bileşenleri IIFE. innerHTML + string concatenation. escapeHtml() her yerde kullanılıyor (XSS korumalı). Kalan sorunlar: eski flat grup rendering (~80 satır dead code), AppState'e doğrudan erişim.",
+          tip: "UI bileşenleri IIFE. innerHTML + string concatenation. escapeHtml() her yerde kullanılıyor. Kalan: ~80 satır ölü flat rendering kodu (T-1'de temizlenecek).",
           children: [
             { name: "$()", meta: "private · helper", health: "green", tip: "querySelector wrapper." },
             { name: "$$()", meta: "private · helper", health: "green", tip: "querySelectorAll → Array wrapper." },
-            { name: "createUI()", meta: "public · DOM", health: "yellow", tip: "innerHTML ile ana UI yapısı oluşturma. ~100 satır HTML template string." },
+            { name: "createUI()", meta: "public · DOM", health: "green", tip: "innerHTML ile ana UI yapısı. FAB + drawer + panel layout." },
             { name: "openDrawer()", meta: "public · DOM", health: "green", tip: "CSS class toggle ile drawer açma." },
             { name: "closeDrawer()", meta: "public · DOM", health: "green", tip: "CSS class toggle ile drawer kapatma." },
-            { name: "updateStats()", meta: "public · DOM", health: "yellow", tip: "innerHTML ile stats güncelleme. Ham HTML kabul eder — çağıran taraf escape etmeli." },
-            { name: "renderTreeView()", meta: "private · recursive", health: "yellow", tip: "Recursive tree HTML renderer. String concatenation + innerHTML. escapeHtml() kullanılmış. AppState'e doğrudan erişir." },
-            { name: "renderEvraklar()", meta: "public · DOM", health: "yellow", tip: "Ana render fonksiyonu. Tree data varsa renderTreeView(), yoksa eski grup rendering (dual code path — dead code temizlenmeli)." },
-            { name: "renderEvrakCard()", meta: "private · template · dead code", health: "yellow", tip: "Eski flat rendering evrak kartı. Tree view aktif olduğunda kullanılmaz. ~20 satır dead code." },
+            { name: "updateStats()", meta: "public · DOM", health: "green", tip: "innerHTML ile stats güncelleme. Çağıran taraf escape etmeli — tüm çağrı noktaları kontrol edildi, güvenli." },
+            { name: "renderTreeView()", meta: "private · recursive", health: "green", tip: "Recursive tree HTML renderer. escapeHtml() kullanılmış. AppState'e doğrudan erişir (coupling)." },
+            { name: "renderEvraklar()", meta: "public · DOM", health: "yellow", tip: "Tree data varsa renderTreeView(), yoksa eski fallback. Dual code path — T-1'de fallback kaldırılacak." },
+            { name: "renderEvrakCard()", meta: "private · dead code", health: "yellow", tip: "Ölü kod: eski flat rendering kartı. T-1'de kaldırılacak." },
             { name: "updateSelectionUI()", meta: "public · DOM", health: "green", tip: "Sayaç ve buton durumu güncelleme." },
             { name: "updateProgress()", meta: "public · DOM", health: "green", tip: "Progress bar güncelleme. CSS class ile durum renklendirme." },
-            { name: "showProgressError()", meta: "public · DOM", health: "green", tip: "textContent ile hata mesajı gösterme. XSS güvenli." },
+            { name: "showProgressError()", meta: "public · DOM", health: "green", tip: "textContent ile hata mesajı. XSS güvenli." },
             { name: "showSessionAlert()", meta: "public · DOM", health: "green", tip: "Session expired alert gösterme." },
-            { name: "showMode()", meta: "public · state machine", health: "green", tip: "5 mod: scan, scanning, select, downloading, completed. Buton visibility yönetimi." }
+            { name: "showMode()", meta: "public · state machine", health: "green", tip: "5 mod: scan, scanning, select, downloading, completed." }
           ]
         },
         {
           name: "main.js",
-          meta: "471 satır · Yüksek karmaşıklık",
+          meta: "523 satır · Yüksek karmaşıklık",
           health: "yellow",
-          tip: "Orkestratör IIFE. Event delegation doğru uygulanmış. Cleanup altyapısı iyi. v2.1: onReset callback bağlama, escapeHtml XSS koruması, Downloader parametrik çağrı. Kalan: fat bindEvents(), eski grup event handler'ları.",
+          tip: "Orkestratör IIFE. Event delegation, cleanup altyapısı, multi-dosya context. Tüm stats HTML escape edilmiş (XSS güvenli). Tüm renkler CSS değişkeni. Kalan: ~40 satır ölü fallback event handler (T-1'de temizlenecek).",
           children: [
             { name: "eventRegistry", meta: "Map · cleanup", health: "green", tip: "Element → [{event, handler}] eşlemesi. Cleanup için tüm listener'ları track eder." },
             { name: "registerEventListener()", meta: "private · infra", health: "green", tip: "addEventListener + registry'ye kayıt." },
             { name: "cleanupObservers()", meta: "private · cleanup", health: "green", tip: "MutationObserver.disconnect()" },
             { name: "cleanupEventListeners()", meta: "private · cleanup", health: "green", tip: "Tüm kayıtlı listener'ları removeEventListener ile temizle." },
-            { name: "init()", meta: "private · lifecycle · v2.1", health: "green", tip: "v2.1: AppState.onReset callback bağlaması eklendi. createUI → bindEvents → observeModal → onReset binding → beforeunload cleanup." },
-            { name: "bindEvents()", meta: "private · 160 satır", health: "yellow", tip: "Tüm event binding'leri tek fonksiyonda. FAB, close, overlay, scan, select, download, pause, cancel, mode toggle, delegated body events (tree + eski grup). Fat function." },
-            { name: "handleScan()", meta: "private · async · v2.1 FIX", health: "green", tip: "v2.1: escapeHtml() ile XSS koruması (dosyaId, dosyaNo, kisiAdi, err.message). Tarama akışı: waitForFiletree → scanFiletree → state güncelle → render." },
-            { name: "handleDownload()", meta: "private · async · v2.1", health: "green", tip: "v2.1: Downloader.downloadAll() parametrik çağrı (evraklar, dosya, settings, callbacks). Sonuç objesi tüketimi." },
+            { name: "init()", meta: "private · lifecycle", health: "green", tip: "createUI → bindEvents → observeModal → onReset callback bağlama → beforeunload cleanup." },
+            { name: "bindEvents()", meta: "private · ~170 satır", health: "yellow", tip: "Tüm event binding'leri tek fonksiyonda. Fat function. ~40 satır ölü eski grup handler (T-1'de temizlenecek)." },
+            { name: "buildOturumStatsHtml()", meta: "private · template", health: "green", tip: "Multi-dosya oturum geçmişi HTML'i. escapeHtml() ile XSS güvenli." },
+            { name: "handleScan()", meta: "private · async", health: "green", tip: "Tarama akışı: waitForFiletree → scanFiletree → multi-dosya context restore → render. Tüm dinamik değerler escaped." },
+            { name: "handleDownload()", meta: "private · async", health: "green", tip: "Downloader.downloadAll() parametrik çağrı. downloadedEvrakIds takibi. Oturum özeti." },
             { name: "handlePause()", meta: "private · toggle", health: "green", tip: "Pause/Resume toggle. Buton text ve class güncelleme." },
             { name: "handleCancel()", meta: "private", health: "green", tip: "Downloader.cancel() + UI mode reset." },
-            { name: "isModalVisible()", meta: "private · DOM check", health: "green", tip: "computedStyle + classList + dimensions ile modal visibility kontrolü." },
-            { name: "observeModal()", meta: "private · MutationObserver", health: "green", tip: "UYAP modal açılma/kapanma gözlemi. Debounce ile (150ms). AppState.reset() → onReset zinciri." }
+            { name: "isModalVisible()", meta: "private · DOM check", health: "green", tip: "UYAP DOM ile doğrulandı: 'in' class + display/visibility kontrolü." },
+            { name: "observeModal()", meta: "private · MutationObserver", health: "green", tip: "Modal kapanınca saveDosyaContext() → resetActiveDosya(). Debounce 150ms." }
           ]
         }
       ]
@@ -220,11 +231,11 @@ const treeData = {
           name: "service-worker.js",
           meta: "90 satır · Düşük karmaşıklık",
           health: "green",
-          tip: "Background service worker. Temiz, minimalist. Message routing + Chrome APIs. Coupling yok. Not: gereksiz Promise wrapper var (MV3 native Promise kullanılabilir).",
+          tip: "Background service worker. Temiz, minimalist. Message routing + Chrome APIs. Kalan: gereksiz callback-based Promise wrapper (T-5'te düzeltilecek).",
           children: [
             { name: "handleMessage()", meta: "async · router", health: "green", tip: "switch/case message router: GET_SETTINGS, SET_SETTINGS, DOWNLOAD_FILE." },
-            { name: "getSettings()", meta: "async · storage", health: "yellow", tip: "chrome.storage.local.get wrapper. Gereksiz Promise wrapper — MV3'te doğrudan await chrome.storage.local.get() kullanılabilir." },
-            { name: "setSettings()", meta: "async · storage", health: "yellow", tip: "chrome.storage.local.set wrapper. Gereksiz Promise wrapper — MV3'te doğrudan await chrome.storage.local.set() kullanılabilir." },
+            { name: "getSettings()", meta: "async · storage", health: "yellow", tip: "Gereksiz Promise wrapper — MV3'te chrome.storage.local.get() native Promise döndürüyor. T-5'te düzeltilecek." },
+            { name: "setSettings()", meta: "async · storage", health: "yellow", tip: "Gereksiz Promise wrapper — MV3'te chrome.storage.local.set() native Promise döndürüyor. T-5'te düzeltilecek." },
             { name: "downloadFile()", meta: "async · downloads", health: "green", tip: "chrome.downloads.download wrapper. saveAs: false, conflictAction: 'uniquify'." },
             { name: "onInstalled", meta: "event · lifecycle", health: "green", tip: "install/update loglama." }
           ]
@@ -233,32 +244,42 @@ const treeData = {
     },
     {
       name: "styles/",
-      meta: "1 dosya · 639 satır",
+      meta: "1 dosya · 658 satır",
       health: "group",
       children: [
         {
           name: "panel.css",
-          meta: "639 satır",
-          health: "yellow",
-          tip: "İyi organize edilmiş CSS. .uyap-ext- prefix ile namespace. CSS değişkenleri tanımlı ama birçok bölümde hardcoded renkler var (tree view, butonlar, scrollbar, stats, title, alert).",
+          meta: "658 satır",
+          health: "green",
+          tip: "İyi organize edilmiş CSS. .uyap-ext- prefix ile namespace. Tüm renkler CSS değişkenlerine taşındı (v2.1.0). Kalan: ~50 satır ölü .uyap-ext-group__* stilleri (T-1'de temizlenecek).",
           children: [
             { name: ":root değişkenleri", meta: "33 satır · Tema", health: "green", tip: "--uyap-color-*, --uyap-z-* değişkenleri. Tutarlı renk sistemi." },
             { name: "Scoped Reset", meta: ".uyap-ext-panel *", health: "green", tip: "box-sizing: border-box. UYAP DOM'unu etkilemez." },
             { name: "FAB Bileşeni", meta: "~50 satır", health: "green", tip: "Animasyonlar: enter + pulse. Responsive (3 breakpoint)." },
-            { name: "Drawer + Overlay", meta: "~40 satır", health: "green", tip: "CSS transition ile açılma/kapanma. Responsive width." },
-            { name: "Scrollbar", meta: "~10 satır", health: "yellow", tip: "Hardcoded renkler: #1e293b, #475569. CSS değişkenlerine taşınmalı." },
-            { name: "Panel Layout", meta: "~80 satır", health: "green", tip: "Flexbox layout: header, stats, actions, body." },
-            { name: "Title", meta: "~5 satır", health: "yellow", tip: "Hardcoded renk: #f0f9ff. CSS değişkenine taşınmalı." },
-            { name: "Stats", meta: "~15 satır", health: "yellow", tip: "Hardcoded renkler: #e2e8f0, #94a3b8. CSS değişkenlerine taşınmalı." },
-            { name: "Buttons", meta: "~40 satır", health: "yellow", tip: "Hardcoded renkler: hover, text, border değerleri. !important kullanımı (UYAP override gerekli). CSS değişkenlerine taşınmalı." },
-            { name: "Evrak Group", meta: "~50 satır", health: "yellow", tip: "Eski flat grup stilleri. Dead code potansiyeli (tree view aktif)." },
-            { name: "Evrak Card", meta: "~30 satır", health: "green", tip: "Dosya kartı stilleri." },
-            { name: "Tree View", meta: "~130 satır", health: "yellow", tip: "11 hardcoded renk: #f9fafb, #6b7280, #374151 vb. CSS değişkenlerine taşınmalı." },
-            { name: "Progress Bar", meta: "~60 satır", health: "green", tip: "Stripe animasyonu. 4 durum rengi." },
-            { name: "Session Alert", meta: "~30 satır", health: "yellow", tip: "Hardcoded renk: #fef2f2. CSS değişkenine taşınmalı." },
-            { name: "Mode Toggle", meta: "~20 satır", health: "green", tip: "Basit/Gelişmiş mod toggle." }
+            { name: "Drawer + Overlay", meta: "~40 satır", health: "green", tip: "CSS transition ile açılma/kapanma. Responsive width. font-family tanımlı." },
+            { name: "Scrollbar", meta: "~10 satır", health: "green", tip: "CSS değişkenleri: text-tertiary, text-secondary." },
+            { name: "Panel Layout", meta: "~80 satır", health: "green", tip: "Flexbox layout: header, stats, actions, body. Tüm renkler CSS değişkeni." },
+            { name: "Buttons", meta: "~40 satır", health: "green", tip: "CSS değişkenleri ile renklendirme. !important (UYAP override gerekli)." },
+            { name: "Evrak Group", meta: "~50 satır · dead code", health: "yellow", tip: "Ölü kod: eski flat grup stilleri. Tree view aktif — T-1'de kaldırılacak." },
+            { name: "Evrak Card", meta: "~30 satır · kısmen dead", health: "yellow", tip: ".uyap-ext-card__checkbox ve .uyap-ext-card__meta tree view'de kullanılıyor. .uyap-ext-card, __content, __name ölü." },
+            { name: "Tree View", meta: "~130 satır", health: "green", tip: "Tüm renkler CSS değişkeni. Folder/file node, toggle, icon, metadata styling." },
+            { name: "Progress Bar", meta: "~60 satır", health: "green", tip: "Stripe animasyonu. 4 durum rengi CSS değişkeni ile." },
+            { name: "Session Alert", meta: "~30 satır", health: "green", tip: "CSS değişkenleri ile renklendirme." },
+            { name: "Mode Toggle", meta: "~20 satır", health: "green", tip: "Basit/Gelişmiş mod toggle." },
+            { name: "Session Summary", meta: "~20 satır", health: "green", tip: "Multi-dosya oturum özeti stilleri. Dashed border-top ile ayrım." }
           ]
         }
+      ]
+    },
+    {
+      name: "tests/",
+      meta: "3 dosya + setup · 70 test",
+      health: "group",
+      children: [
+        { name: "setup.js", meta: "ESM · vm.runInThisContext", health: "green", tip: "Content script'leri global scope'a yükler: constants.js → scanner.js → state.js → downloader.js. jsdom ortamı." },
+        { name: "constants.test.js", meta: "31 test", health: "green", tip: "sanitizeName(), escapeHtml(), getDownloadEndpoint(), MAGIC_BYTES, YARGI_TURLERI testleri." },
+        { name: "scanner.test.js", meta: "17 test", health: "green", tip: "parseTooltip(), buildTreeFromFlat(), detectPagination() testleri." },
+        { name: "state.test.js", meta: "22 test", health: "green", tip: "Seçim, klasör, multi-dosya context (save/restore/isDownloaded/recalc/ozet), reset testleri." }
       ]
     },
     {
@@ -266,9 +287,10 @@ const treeData = {
       meta: "Geliştirme araçları",
       health: "group",
       children: [
-        { name: "eslint.config.js", meta: "194 satır · ESM", health: "green", tip: "Per-file globals yapılandırması. constants → scanner → downloader → state → ui → main bağımlılık zinciri doğru tanımlı." },
+        { name: "eslint.config.js", meta: "216 satır · ESM", health: "green", tip: "Per-file globals yapılandırması. Content scripts + background + tests. Bağımlılık zinciri doğru tanımlı." },
+        { name: "vitest.config.js", meta: "ESM · jsdom", health: "green", tip: "Test ortamı: jsdom, setup: tests/setup.js, globals: true." },
         { name: ".prettierrc", meta: "JSON · code style", health: "green", tip: "singleQuote: true, printWidth: 100, trailingComma: es5" },
-        { name: "package.json", meta: "dev dependencies", health: "green", tip: "eslint + prettier + eslint-config-prettier" }
+        { name: "package.json", meta: "scripts + devDeps", health: "green", tip: "Scripts: test, test:watch, lint. DevDeps: eslint, prettier, vitest, jsdom." }
       ]
     }
   ]
