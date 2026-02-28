@@ -22,9 +22,12 @@ Selector : body > div.page-container > div:nth-child(1) > div > div >
 [yargiTuru=0 / Ceza]
 
 1. Müşteki | Antalya BAM 4. Ceza Dairesi | 2022/1087 | Kapalı (23.05.2022)
+
 2. Müşteki | Isparta 6. Asliye Ceza Mahkemesi | 2021/605 | Kapalı (23.05.2022)
    [yargiTuru=1 / Hukuk]
+
 3. Davalı  | Antalya BAM 2. Hukuk Dairesi | 2023/3135 | Kapalı
+
 4. Davalı  | Isparta 2. Aile Mahkemesi | 2021/612 | Kapalı (05.02.2026)
    [yargiTuru=2,5,6,11,25,26] → Tümü: kayıt bulunamadı
    Aktif yargı türleri : ["0", "1"] (Ceza + Hukuk)
@@ -59,6 +62,7 @@ Selector : body > div.page-container > div:nth-child(1) > div > div >
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    🐛 BULUNAN HATALAR
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
    1. yargiTuru BUG: UYAP JSP dblclick handler'larında yargiTuru='1'
       hardcoded → Güvenilir kaynak: #yargiTuru select .value
    2. Stats "No: >" hatası: HTML entity parse edilemiyor

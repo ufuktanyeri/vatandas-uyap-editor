@@ -365,7 +365,7 @@
 
     } catch (err) {
       console.error('[UYAP-EXT] Scan failed:', err);
-      UI.updateStats(`<p style="color:#dc2626;">⚠ Tarama başarısız: ${escapeHtml(err.message)}</p>`);
+      UI.updateStats(`<p style="color:var(--uyap-color-error);">⚠ Tarama başarısız: ${escapeHtml(err.message)}</p>`);
       UI.showMode('scan');
     }
   }
@@ -377,7 +377,7 @@
     if (seciliEvraklar.length === 0) return;
 
     if (!AppState.dosyaBilgileri) {
-      UI.updateStats('<p style="color:#dc2626;">⚠ Dosya bilgileri bulunamadı. Yeniden tarayın.</p>');
+      UI.updateStats('<p style="color:var(--uyap-color-error);">⚠ Dosya bilgileri bulunamadı. Yeniden tarayın.</p>');
       return;
     }
 
