@@ -166,7 +166,7 @@ function scanFiletree() {
   const filetree = document.querySelector(SELECTORS.FILETREE);
   if (!filetree) {
     console.warn('[UYAP-EXT] Filetree not found');
-    return [];
+    return { tree: [], flatList: [] };
   }
 
   const seen = new Set();

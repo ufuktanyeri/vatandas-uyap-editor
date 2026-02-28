@@ -334,8 +334,12 @@
       // Tümünü seç (varsayılan)
       AppState.tumunuSec();
 
-      // Stats güncelle
-      let statsHtml = `<p><strong>${scanResult.flatList.length}</strong> evrak bulundu</p>`;
+      // Evrakları render et (updateSelectionUI içinde çağrılır)
+      UI.renderEvraklar();
+
+      // Stats güncelle — seçili sayıyı kullan (tree ile uyumlu)
+      const seciliSayisi = AppState.seciliEvrakIds.size;
+      let statsHtml = `<p><strong>${seciliSayisi}</strong> evrak bulundu</p>`;
       if (dosya) {
         statsHtml += `<p>Dosya ID: <strong>${escapeHtml(dosya.dosyaId)}</strong>`;
         if (dosya.dosyaNo) statsHtml += ` | No: <strong>${escapeHtml(dosya.dosyaNo)}</strong>`;
@@ -353,8 +357,6 @@
       statsHtml += buildOturumStatsHtml();
       UI.updateStats(statsHtml);
 
-      // Evrakları render et
-      UI.renderEvraklar();
       UI.showMode('select');
 
       console.log('[UYAP-EXT] Scan complete:', {

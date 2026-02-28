@@ -409,16 +409,27 @@ const UI = (() => {
 
     switch (mode) {
       case 'scan':
-        if (scanBtn) { scanBtn.disabled = false; scanBtn.style.display = ''; }
+        if (scanBtn) {
+          scanBtn.disabled = false;
+          scanBtn.style.display = '';
+          scanBtn.innerHTML = '<i class="fa fa-search uyap-ext-icon-spacing-sm"></i>Dosyaları Tara';
+        }
         if (modeRow) modeRow.style.display = '';
         break;
 
       case 'scanning':
-        if (scanBtn) { scanBtn.disabled = true; }
+        if (scanBtn) {
+          scanBtn.disabled = true;
+          scanBtn.innerHTML = '<i class="fa fa-spinner fa-spin uyap-ext-icon-spacing-sm"></i>Taranıyor...';
+        }
         break;
 
       case 'select':
-        if (scanBtn) { scanBtn.style.display = ''; scanBtn.disabled = false; }
+        if (scanBtn) {
+          scanBtn.style.display = '';
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="fa fa-refresh uyap-ext-icon-spacing-sm"></i>Yeniden Tara';
+        }
         if (selectionActions) selectionActions.style.display = '';
         if (downloadActions) downloadActions.style.display = '';
         if (modeRow) modeRow.style.display = '';
@@ -431,7 +442,11 @@ const UI = (() => {
         break;
 
       case 'completed':
-        if (scanBtn) { scanBtn.style.display = ''; scanBtn.disabled = false; }
+        if (scanBtn) {
+          scanBtn.style.display = '';
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="fa fa-refresh uyap-ext-icon-spacing-sm"></i>Yeniden Tara';
+        }
         if (selectionActions) selectionActions.style.display = '';
         if (downloadActions) downloadActions.style.display = '';
         if (modeRow) modeRow.style.display = '';
