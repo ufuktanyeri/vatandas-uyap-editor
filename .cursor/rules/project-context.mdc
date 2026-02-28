@@ -8,8 +8,8 @@ alwaysApply: true
 
 ## Mevcut Sürüm ve Durum
 
-- **Sürüm:** v2.1.0 (manifest.json güncel)
-- **Son commit:** `8a546ce` — fix(style): replace hardcoded error colors with CSS variable
+- **Sürüm:** v2.1.0 (manifest.json, package.json, README.md güncel)
+- **Son commit:** `b2109f9` — docs: update README for v2.1.0, fix package.json version
 - **Repo:** https://github.com/ufuktanyeri/vatandas-uyap-editor
 - **Branch:** main
 
@@ -24,10 +24,12 @@ alwaysApply: true
 7. **Yargı türü desteği** — Tüm yargiTuru'ler için doğru endpoint routing
 8. **UYAP DOM doğrulaması** — Chrome Claude ile canlı DOM analizi yapıldı, tüm selector'lar doğrulandı
 9. **window.dosyaId keşfi** — UYAP global olarak tanımlıyor, findDosyaId() basitleştirilebilir
+10. **README güncelleme** — v2.1.0 ile uyumlu, özellikler/dosya yapısı/lisans düzeltildi
+11. **Proje temizliği** — docs/ .gitignore'a eklendi, GitHub'dan kaldırıldı (lokal kalır)
 
 ## Bekleyen Görevler (v2.2.0)
 
-Detaylar: `docs/todo-by-prompt.md`
+Detaylar: `docs/TODO.md` (lokal, git-tracked değil)
 
 ### Yeni Bulgular (kod kalitesi değerlendirmesinden)
 - **BUG:** scanFiletree() filetree bulunamazsa `[]` dönüyor, `{ tree:[], flatList:[] }` dönmeli

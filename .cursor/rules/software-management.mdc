@@ -131,21 +131,28 @@ const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
 ## Yol Haritası (Roadmap)
 
-### v2.1.0 — Kalite ve Kararlılık
-- ESLint + Prettier yapılandırması
-- State-UI coupling'i kırma (observer pattern)
-- Downloader'ı pure hale getirme
-- CSS hardcode renklerini değişkenlere taşıma
+### v2.1.0 — Kalite ve Kararlılık ✅
+- ~~ESLint + Prettier yapılandırması~~
+- ~~State-UI coupling'i kırma (observer pattern)~~
+- ~~Downloader'ı pure hale getirme~~
+- ~~CSS hardcode renklerini değişkenlere taşıma~~
+- ~~XSS koruma (escapeHtml)~~
+- ~~Birim test altyapısı (Vitest + jsdom, 70 test)~~
+- ~~README, package.json güncelleme~~
 
-### v2.2.0 — Performans
+### v2.2.0 — Refactoring ve Performans
+- Eski flat rendering kodunu kaldırma (~120 satır ölü kod)
+- Scanner findDosyaId() — window.dosyaId kullan, innerHTML kaldır
 - base64 yerine blob URL indirme stratejisi
-- Eski grup rendering kodunu kaldırma
 - Global scope temizleme (IIFE sarmalama)
+- SW Promise wrapper temizliği (callback → native)
+- DOCX vs UDF ayrımı (ZIP magic bytes sonrası kontrol)
+- scanFiletree() hata dönüş tipi düzeltmesi (bug)
 
-### v2.3.0 — Test ve Dokümantasyon
-- Birim test altyapısı (pure fonksiyonlar)
+### v2.3.0 — Dokümantasyon ve Kalite
 - JSDoc type annotations
 - CHANGELOG.md başlatma
+- Downloader IIFE iç fonksiyon testleri
 
 ### v3.0.0 — Gelişmiş Özellikler (Gelecek)
 - Çoklu sayfa desteği (pagination)
