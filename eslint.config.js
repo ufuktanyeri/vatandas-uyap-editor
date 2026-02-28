@@ -30,9 +30,12 @@ const browserGlobals = {
   Array: 'readonly',
   Object: 'readonly',
   chrome: 'readonly',
+  globalThis: 'readonly',
+  encodeURIComponent: 'readonly',
 };
 
 const constantsExports = {
+  UyapConstants: 'readonly',
   UYAP_BASE_URL: 'readonly',
   DOWNLOAD_ENDPOINTS: 'readonly',
   getDownloadEndpoint: 'readonly',
@@ -50,18 +53,6 @@ const constantsExports = {
   STORAGE_KEYS: 'readonly',
   sanitizeName: 'readonly',
   escapeHtml: 'readonly',
-};
-
-const scannerExports = {
-  findDosyaId: 'readonly',
-  getYargiTuru: 'readonly',
-  findKisiAdi: 'readonly',
-  getDosyaBilgileri: 'readonly',
-  parseTooltip: 'readonly',
-  scanFiletree: 'readonly',
-  buildTreeFromFlat: 'readonly',
-  detectPagination: 'readonly',
-  waitForFiletree: 'readonly',
 };
 
 const sharedRules = {
@@ -88,7 +79,7 @@ const langBase = {
 export default [
   js.configs.recommended,
 
-  // constants.js -- defines globals, consumed by all other files
+  // constants.js — IIFE, defines globals via Object.assign(globalThis, ...)
   {
     files: ['content/constants.js'],
     languageOptions: { ...langBase, globals: { ...browserGlobals } },
@@ -99,7 +90,7 @@ export default [
     },
   },
 
-  // scanner.js -- consumes constants, defines scanner functions
+  // scanner.js — Scanner static class
   {
     files: ['content/scanner.js'],
     languageOptions: { ...langBase, globals: { ...browserGlobals, ...constantsExports } },
@@ -109,24 +100,7 @@ export default [
     },
   },
 
-  // downloader.js -- consumes constants only (AppState + scanner coupling removed)
-  {
-    files: ['content/downloader.js'],
-    languageOptions: {
-      ...langBase,
-      globals: {
-        ...browserGlobals,
-        ...constantsExports,
-      },
-    },
-    rules: {
-      ...sharedRules,
-      'no-unused-vars': 'off',
-      'no-shadow': 'warn',
-    },
-  },
-
-  // state.js -- consumes constants only (UI coupling removed via onReset callback)
+  // state.js — AppStateManager class + AppState instance
   {
     files: ['content/state.js'],
     languageOptions: {
@@ -139,7 +113,20 @@ export default [
     },
   },
 
-  // ui.js -- consumes constants + state
+  // downloader.js — DownloadManager class + Downloader instance
+  {
+    files: ['content/downloader.js'],
+    languageOptions: {
+      ...langBase,
+      globals: { ...browserGlobals, ...constantsExports },
+    },
+    rules: {
+      ...sharedRules,
+      'no-unused-vars': 'off',
+    },
+  },
+
+  // ui.js — UIManager class + UI instance
   {
     files: ['content/ui.js'],
     languageOptions: {
@@ -152,7 +139,7 @@ export default [
     },
   },
 
-  // main.js -- orchestrator, consumes everything
+  // main.js — AppController class (orchestrator)
   {
     files: ['content/main.js'],
     languageOptions: {
@@ -160,7 +147,7 @@ export default [
       globals: {
         ...browserGlobals,
         ...constantsExports,
-        ...scannerExports,
+        Scanner: 'readonly',
         AppState: 'readonly',
         Downloader: 'readonly',
         UI: 'readonly',
@@ -172,7 +159,7 @@ export default [
     },
   },
 
-  // background service worker -- ES module, only chrome API
+  // background service worker — ES module, only chrome API
   {
     files: ['background/**/*.js'],
     languageOptions: {
@@ -186,7 +173,7 @@ export default [
     },
   },
 
-  // Test files -- Vitest + ESM imports
+  // Test files — Vitest + ESM imports
   {
     files: ['tests/**/*.js', 'vitest.config.js'],
     languageOptions: {
@@ -195,10 +182,10 @@ export default [
       globals: {
         ...browserGlobals,
         ...constantsExports,
-        ...scannerExports,
+        Scanner: 'readonly',
         AppState: 'writable',
         Downloader: 'readonly',
-        globalThis: 'readonly',
+        UI: 'readonly',
       },
     },
     rules: {
@@ -210,6 +197,6 @@ export default [
   prettier,
 
   {
-    ignores: ['node_modules/**', 'code-map.html', 'icons/**', '*.md', 'setup-icons.ps1'],
+    ignores: ['node_modules/**', 'code-map.html', 'icons/**', '*.md', 'setup-icons.ps1', 'dev-server.cjs'],
   },
 ];

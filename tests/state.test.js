@@ -199,17 +199,17 @@ describe('AppState multi-dosya context tracking', () => {
     expect(AppState.isEvrakDownloaded('99')).toBe(false);
   });
 
-  it('_recalcOturumStats aggregates all dosya stats', () => {
-    AppState.dosyaGecmisi.set('D1', {
-      downloadedEvrakIds: new Set(), dosyaBilgileri: {},
-      stats: { completed: 5, failed: 1 }, evrakSayisi: 6, yargiTuruAdi: ''
-    });
-    AppState.dosyaGecmisi.set('D2', {
-      downloadedEvrakIds: new Set(), dosyaBilgileri: {},
-      stats: { completed: 3, failed: 2 }, evrakSayisi: 5, yargiTuruAdi: ''
-    });
+  it('recalculates oturum stats via saveDosyaContext', () => {
+    AppState.dosyaBilgileri = { dosyaId: 'D1', dosyaNo: '2026/1', yargiTuru: '1' };
+    AppState.evraklar = Array.from({ length: 6 }, (_, i) => ({ evrakId: String(i) }));
+    AppState.stats = { total: 6, completed: 5, failed: 1 };
+    AppState.saveDosyaContext();
 
-    AppState._recalcOturumStats();
+    AppState.dosyaBilgileri = { dosyaId: 'D2', dosyaNo: '2026/2', yargiTuru: '1' };
+    AppState.evraklar = Array.from({ length: 5 }, (_, i) => ({ evrakId: String(10 + i) }));
+    AppState.stats = { total: 5, completed: 3, failed: 2 };
+    AppState.saveDosyaContext();
+
     expect(AppState.oturumStats.toplamIndirilen).toBe(8);
     expect(AppState.oturumStats.toplamBasarisiz).toBe(3);
   });

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-describe('parseTooltip', () => {
+describe('Scanner.parseTooltip', () => {
   it('parses div-based tooltips', () => {
     const tooltip = '<div>Birim Evrak No: 7319</div><div>Onay Tarihi: 06/02/2026</div>';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(result).toEqual({
       'Birim Evrak No': '7319',
       'Onay Tarihi': '06/02/2026'
@@ -12,7 +12,7 @@ describe('parseTooltip', () => {
 
   it('parses br-based tooltips', () => {
     const tooltip = 'Türü: Dilekçe<br>Evrakın Onaylandığı Tarih: 15/01/2026';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(result).toEqual({
       'Türü': 'Dilekçe',
       'Evrakın Onaylandığı Tarih': '15/01/2026'
@@ -21,7 +21,7 @@ describe('parseTooltip', () => {
 
   it('parses mixed format tooltips', () => {
     const tooltip = '<div>Evrak Türü: Karar</div>Tarih: 20/03/2026<br>Kayıt No: 123';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(result).toEqual({
       'Evrak Türü': 'Karar',
       'Tarih': '20/03/2026',
@@ -30,37 +30,37 @@ describe('parseTooltip', () => {
   });
 
   it('returns empty object for null/empty input', () => {
-    expect(parseTooltip(null)).toEqual({});
-    expect(parseTooltip('')).toEqual({});
-    expect(parseTooltip(undefined)).toEqual({});
+    expect(Scanner.parseTooltip(null)).toEqual({});
+    expect(Scanner.parseTooltip('')).toEqual({});
+    expect(Scanner.parseTooltip(undefined)).toEqual({});
   });
 
   it('strips nested HTML tags from values', () => {
     const tooltip = '<div>Tür: <b>Dilekçe</b></div>';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(result['Tür']).toBe('Dilekçe');
   });
 
   it('ignores lines without colon', () => {
     const tooltip = '<div>No colon here</div><div>Key: Value</div>';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(Object.keys(result)).toEqual(['Key']);
   });
 
   it('handles colon in value (not just key)', () => {
     const tooltip = '<div>Not: Bu belge saat 14:30 itibariyle geçerlidir</div>';
-    const result = parseTooltip(tooltip);
+    const result = Scanner.parseTooltip(tooltip);
     expect(result['Not']).toBe('Bu belge saat 14:30 itibariyle geçerlidir');
   });
 });
 
-describe('buildTreeFromFlat', () => {
+describe('Scanner.buildTreeFromFlat', () => {
   it('builds single-level tree (root files)', () => {
     const flatList = [
       { evrakId: '1', name: 'Belge A', relativePath: '' },
       { evrakId: '2', name: 'Belge B', relativePath: '' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree).toHaveLength(2);
     expect(tree.every(n => n.type === 'file')).toBe(true);
   });
@@ -69,7 +69,7 @@ describe('buildTreeFromFlat', () => {
     const flatList = [
       { evrakId: '1', name: 'Karar.pdf', relativePath: 'Kararlar', evrakTuru: '', evrakTarihi: '' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree).toHaveLength(1);
     expect(tree[0].type).toBe('folder');
     expect(tree[0].name).toBe('Kararlar');
@@ -82,7 +82,7 @@ describe('buildTreeFromFlat', () => {
     const flatList = [
       { evrakId: '1', name: 'Doc.pdf', relativePath: 'A/B/C', evrakTuru: '', evrakTarihi: '' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree[0].type).toBe('folder');
     expect(tree[0].name).toBe('A');
     expect(tree[0].children[0].type).toBe('folder');
@@ -97,7 +97,7 @@ describe('buildTreeFromFlat', () => {
       { evrakId: '1', name: 'A.pdf', relativePath: 'Folder1', evrakTuru: '', evrakTarihi: '' },
       { evrakId: '2', name: 'B.pdf', relativePath: 'Folder1', evrakTuru: '', evrakTarihi: '' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree).toHaveLength(1);
     expect(tree[0].type).toBe('folder');
     expect(tree[0].children).toHaveLength(2);
@@ -108,7 +108,7 @@ describe('buildTreeFromFlat', () => {
       { evrakId: '100', name: 'Dilekçe', relativePath: 'Belgeler', evrakTuru: '', evrakTarihi: '' },
       { evrakId: '200', name: 'Dilekçe', relativePath: 'Belgeler', evrakTuru: '', evrakTarihi: '' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree[0].children).toHaveLength(2);
     expect(tree[0].children[0].evrakId).not.toBe(tree[0].children[1].evrakId);
   });
@@ -117,19 +117,19 @@ describe('buildTreeFromFlat', () => {
     const flatList = [
       { evrakId: '1', name: 'Test', relativePath: '', evrakTuru: 'Dilekçe', evrakTarihi: '15/01/2026' },
     ];
-    const tree = buildTreeFromFlat(flatList);
+    const tree = Scanner.buildTreeFromFlat(flatList);
     expect(tree[0].metadata).toEqual({ evrakTuru: 'Dilekçe', evrakTarihi: '15/01/2026' });
   });
 
   it('handles empty flat list', () => {
-    const tree = buildTreeFromFlat([]);
+    const tree = Scanner.buildTreeFromFlat([]);
     expect(tree).toEqual([]);
   });
 });
 
-describe('detectPagination', () => {
+describe('Scanner.detectPagination', () => {
   it('returns null when no result container exists', () => {
-    expect(detectPagination()).toBeNull();
+    expect(Scanner.detectPagination()).toBeNull();
   });
 
   it('detects pagination text', () => {
@@ -138,7 +138,7 @@ describe('detectPagination', () => {
     container.textContent = 'Toplam 5 sayfadan 2. sayfa gösteriliyor';
     document.body.appendChild(container);
 
-    const result = detectPagination();
+    const result = Scanner.detectPagination();
     expect(result).toEqual({
       currentPage: 2,
       totalPages: 5,
@@ -154,7 +154,7 @@ describe('detectPagination', () => {
     container.textContent = 'Toplam 1 sayfadan 1. sayfa';
     document.body.appendChild(container);
 
-    const result = detectPagination();
+    const result = Scanner.detectPagination();
     expect(result).toEqual({
       currentPage: 1,
       totalPages: 1,

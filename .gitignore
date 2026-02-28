@@ -17,3 +17,6 @@ Thumbs.db
 
 # Developer docs (personal notes, session transcripts, analysis)
 docs/
+
+# Dev server (local tool)
+dev-server.cjs

@@ -297,86 +297,6 @@
   .uyap-ext-btn { padding: 10px 14px; font-size: 14px; }
 }
 
-/* ===== EVRAK GROUP ===== */
-.uyap-ext-group {
-  border-bottom: 1px solid var(--uyap-color-border-gray);
-}
-
-.uyap-ext-group__header {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  background: var(--uyap-color-bg-gray-50);
-  cursor: pointer;
-  transition: background-color 0.1s;
-  gap: 8px;
-}
-
-.uyap-ext-group__header:hover { background: var(--uyap-color-bg-gray-100); }
-
-.uyap-ext-group__checkbox { flex-shrink: 0; }
-
-.uyap-ext-group__toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: var(--uyap-color-text-secondary);
-  flex-shrink: 0;
-}
-
-.uyap-ext-group__toggle i { font-size: 12px; transition: transform 0.2s; }
-.uyap-ext-group__toggle--open i { transform: rotate(90deg); }
-
-.uyap-ext-group__folder-icon { color: var(--uyap-color-folder); font-size: 16px; flex-shrink: 0; }
-
-.uyap-ext-group__name {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--uyap-color-text-primary);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.uyap-ext-group__count { font-size: 12px; color: var(--uyap-color-text-secondary); flex-shrink: 0; }
-
-/* ===== EVRAK CARD ===== */
-.uyap-ext-card {
-  display: flex;
-  align-items: flex-start;
-  padding: 10px 12px 10px 36px;
-  gap: 10px;
-  transition: background-color 0.1s;
-}
-
-.uyap-ext-card:hover { background-color: var(--uyap-color-bg-gray-50); }
-.uyap-ext-card + .uyap-ext-card { border-top: 1px solid var(--uyap-color-bg-gray-100); }
-
-.uyap-ext-card__checkbox { margin-top: 2px; flex-shrink: 0; }
-
-.uyap-ext-card__content { flex: 1; min-width: 0; }
-
-.uyap-ext-card__name {
-  font-size: 13px;
-  color: var(--uyap-color-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-}
-
-.uyap-ext-card__meta {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--uyap-color-text-secondary);
-  display: flex;
-  gap: 12px;
-}
-
 /* ===== TREE VIEW STYLES ===== */
 
 .uyap-ext-tree-node {
@@ -472,11 +392,15 @@
   background: var(--uyap-color-bg-gray-50);
 }
 
-/* File checkbox */
+/* File & folder checkbox */
 .uyap-ext-file-checkbox,
 .uyap-ext-folder-checkbox {
   flex-shrink: 0;
   cursor: pointer;
+}
+
+.uyap-ext-file-checkbox {
+  margin-top: 2px;
 }
 
 /* File content */

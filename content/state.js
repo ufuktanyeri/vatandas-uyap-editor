@@ -1,298 +1,220 @@
 /**
- * state.js - Uygulama durumu
- * Kaynak: v2/src/store/signals.ts (reactive olmayan vanilla JS versiyonu)
+ * state.js - Uygulama durumu (AppStateManager class)
  *
- * Callback'ler: UI etkileşimi main.js tarafından onReset ile bağlanır.
- * State modülü hiçbir UI modülünü doğrudan çağırmaz.
+ * Private alanlar UYAP sayfasının extension state'ine erişimini engeller.
+ * Public API getter/setter'lar ile kontrollü erişim sağlar.
+ * Callback: main.js onReset ile UI bağlar; state modülü UI çağırmaz.
  */
 
-const AppState = {
-  // Reset callback — main.js tarafından atanır
-  onReset: null,
+class AppStateManager {
+  #evraklar = [];
+  #seciliEvrakIds = new Set();
+  #treeData = null;
+  #expandedFolders = new Set();
+  #dosyaBilgileri = null;
+  #downloadStatus = 'idle';
+  #stats = { total: 0, completed: 0, failed: 0 };
+  #sessionExpired = false;
+  #pagination = null;
+  #kisiAdi = '';
+  #settings = { ...DEFAULT_SETTINGS };
+  #useSimpleMode = false;
+  #initialized = false;
+  #downloadedEvrakIds = new Set();
+  #dosyaGecmisi = new Map();
+  #oturumStats = { toplamIndirilen: 0, toplamBasarisiz: 0 };
 
-  // Taranan evraklar
-  evraklar: [],
+  onReset = null;
 
-  // Seçili evrak ID'leri
-  seciliEvrakIds: new Set(),
+  // --- Property access ---
 
-  // Dosya bilgileri (dosyaId, dosyaNo, yargiTuru)
-  dosyaBilgileri: null,
+  get evraklar() { return this.#evraklar; }
+  set evraklar(v) { this.#evraklar = v; }
 
-  // İndirme durumu
-  downloadStatus: 'idle', // idle | downloading | paused | completed | error
+  get seciliEvrakIds() { return this.#seciliEvrakIds; }
+  set seciliEvrakIds(v) { this.#seciliEvrakIds = v; }
 
-  // İstatistikler
-  stats: {
-    total: 0,
-    completed: 0,
-    failed: 0
-  },
+  get treeData() { return this.#treeData; }
+  set treeData(v) { this.#treeData = v; }
 
-  // Session expired flag
-  sessionExpired: false,
+  get expandedFolders() { return this.#expandedFolders; }
+  set expandedFolders(v) { this.#expandedFolders = v; }
 
-  // Pagination bilgisi
-  pagination: null,
+  get dosyaBilgileri() { return this.#dosyaBilgileri; }
+  set dosyaBilgileri(v) { this.#dosyaBilgileri = v; }
 
-  // Kişi adı
-  kisiAdi: '',
+  get downloadStatus() { return this.#downloadStatus; }
+  set downloadStatus(v) { this.#downloadStatus = v; }
 
-  // Ayarlar
-  settings: { ...DEFAULT_SETTINGS },
+  get stats() { return this.#stats; }
+  set stats(v) { this.#stats = v; }
 
-  // İndirme modu
-  useSimpleMode: false,  // true: window.downloadDoc(), false: fetch + magic bytes
+  get sessionExpired() { return this.#sessionExpired; }
+  set sessionExpired(v) { this.#sessionExpired = v; }
 
-  // Initialized flag
-  initialized: false,
+  get pagination() { return this.#pagination; }
+  set pagination(v) { this.#pagination = v; }
 
-  // Tree data (nested structure)
-  treeData: null,
+  get kisiAdi() { return this.#kisiAdi; }
+  set kisiAdi(v) { this.#kisiAdi = v; }
 
-  // Açık klasörler (Set of full paths)
-  expandedFolders: new Set(),
+  get settings() { return this.#settings; }
+  set settings(v) { this.#settings = v; }
 
-  // Multi-dosya: aktif dosyada indirilen evrak ID'leri
-  downloadedEvrakIds: new Set(),
+  get useSimpleMode() { return this.#useSimpleMode; }
+  set useSimpleMode(v) { this.#useSimpleMode = v; }
 
-  // Multi-dosya: oturum boyunca dosya gecmisi (dosyaId -> context)
-  dosyaGecmisi: new Map(),
+  get initialized() { return this.#initialized; }
+  set initialized(v) { this.#initialized = v; }
 
-  // Multi-dosya: oturum geneli istatistikler
-  oturumStats: {
-    toplamIndirilen: 0,
-    toplamBasarisiz: 0
-  },
+  get downloadedEvrakIds() { return this.#downloadedEvrakIds; }
+  set downloadedEvrakIds(v) { this.#downloadedEvrakIds = v; }
 
-  // Evrakları klasörlere göre grupla
-  getGroupedEvraklar() {
-    const groups = new Map();
+  get dosyaGecmisi() { return this.#dosyaGecmisi; }
+  set dosyaGecmisi(v) { this.#dosyaGecmisi = v; }
 
-    for (const evrak of this.evraklar) {
-      const folder = evrak.relativePath
-        ? evrak.relativePath.split('/')[0]
-        : 'Diğer';
+  get oturumStats() { return this.#oturumStats; }
+  set oturumStats(v) { this.#oturumStats = v; }
 
-      if (!groups.has(folder)) {
-        groups.set(folder, []);
-      }
-      groups.get(folder).push(evrak);
-    }
+  // --- Selection ---
 
-    return groups;
-  },
-
-  // Seçim yardımcıları
   toggleEvrakSecimi(evrakId) {
-    if (this.seciliEvrakIds.has(evrakId)) {
-      this.seciliEvrakIds.delete(evrakId);
+    if (this.#seciliEvrakIds.has(evrakId)) {
+      this.#seciliEvrakIds.delete(evrakId);
     } else {
-      this.seciliEvrakIds.add(evrakId);
+      this.#seciliEvrakIds.add(evrakId);
     }
-  },
+  }
 
   tumunuSec() {
-    this.seciliEvrakIds = new Set(this.evraklar.map(e => e.evrakId));
-  },
+    this.#seciliEvrakIds = new Set(this.#evraklar.map(e => e.evrakId));
+  }
 
   secimiTemizle() {
-    this.seciliEvrakIds = new Set();
-  },
+    this.#seciliEvrakIds = new Set();
+  }
 
-  klasorEvraklariniSec(klasorAdi) {
-    const groups = this.getGroupedEvraklar();
-    const evraklar = groups.get(klasorAdi) || [];
-    for (const evrak of evraklar) {
-      this.seciliEvrakIds.add(evrak.evrakId);
-    }
-  },
-
-  klasorEvraklariniKaldir(klasorAdi) {
-    const groups = this.getGroupedEvraklar();
-    const evraklar = groups.get(klasorAdi) || [];
-    for (const evrak of evraklar) {
-      this.seciliEvrakIds.delete(evrak.evrakId);
-    }
-  },
-
-  // Seçili evrakları al
   getSeciliEvraklar() {
-    return this.evraklar.filter(e => this.seciliEvrakIds.has(e.evrakId));
-  },
+    return this.#evraklar.filter(e => this.#seciliEvrakIds.has(e.evrakId));
+  }
 
-  /**
-   * Klasör açık/kapalı state'ini toggle et
-   */
+  // --- Tree ---
+
   toggleFolderExpanded(fullPath) {
-    if (this.expandedFolders.has(fullPath)) {
-      this.expandedFolders.delete(fullPath);
+    if (this.#expandedFolders.has(fullPath)) {
+      this.#expandedFolders.delete(fullPath);
     } else {
-      this.expandedFolders.add(fullPath);
+      this.#expandedFolders.add(fullPath);
     }
-  },
+  }
 
-  /**
-   * Tree'de belirli bir path'e sahip node'u bul
-   */
   findNodeByPath(tree, fullPath) {
-    function search(nodes) {
-      for (const node of nodes) {
-        if (node.fullPath === fullPath) return node;
-        if (node.type === 'folder' && node.children) {
-          const found = search(node.children);
-          if (found) return found;
-        }
+    for (const node of tree) {
+      if (node.fullPath === fullPath) return node;
+      if (node.type === 'folder' && node.children) {
+        const found = this.findNodeByPath(node.children, fullPath);
+        if (found) return found;
       }
-      return null;
     }
-    return search(tree);
-  },
+    return null;
+  }
 
-  /**
-   * Klasördeki tüm dosyaları seç (recursive)
-   */
   selectAllInFolder(node) {
-    const selectFiles = (n) => {
-      if (n.type === 'file') {
-        this.seciliEvrakIds.add(n.evrakId);
-      } else if (n.children) {
-        n.children.forEach(selectFiles);
-      }
-    };
-    selectFiles(node);
-  },
+    if (node.type === 'file') {
+      this.#seciliEvrakIds.add(node.evrakId);
+    } else if (node.children) {
+      node.children.forEach(n => this.selectAllInFolder(n));
+    }
+  }
 
-  /**
-   * Klasördeki tüm dosya seçimini kaldır (recursive)
-   */
   deselectAllInFolder(node) {
-    const deselectFiles = (n) => {
-      if (n.type === 'file') {
-        this.seciliEvrakIds.delete(n.evrakId);
-      } else if (n.children) {
-        n.children.forEach(deselectFiles);
-      }
-    };
-    deselectFiles(node);
-  },
+    if (node.type === 'file') {
+      this.#seciliEvrakIds.delete(node.evrakId);
+    } else if (node.children) {
+      node.children.forEach(n => this.deselectAllInFolder(n));
+    }
+  }
 
-  /**
-   * Klasördeki tüm dosyalar seçili mi kontrol et
-   */
   isFolderFullySelected(node) {
-    const checkAll = (n) => {
-      if (n.type === 'file') {
-        return this.seciliEvrakIds.has(n.evrakId);
-      }
-      if (n.children && n.children.length > 0) {
-        return n.children.every(checkAll);
-      }
-      return true;
-    };
-    return checkAll(node);
-  },
+    if (node.type === 'file') return this.#seciliEvrakIds.has(node.evrakId);
+    if (node.children && node.children.length > 0) {
+      return node.children.every(n => this.isFolderFullySelected(n));
+    }
+    return true;
+  }
 
-  /**
-   * Klasördeki toplam dosya sayısı (recursive)
-   */
   getFileCountInFolder(node) {
-    let count = 0;
-    const traverse = (n) => {
-      if (n.type === 'file') {
-        count++;
-      } else if (n.children) {
-        n.children.forEach(traverse);
-      }
-    };
-    traverse(node);
-    return count;
-  },
+    if (node.type === 'file') return 1;
+    if (!node.children) return 0;
+    return node.children.reduce((sum, n) => sum + this.getFileCountInFolder(n), 0);
+  }
 
-  /**
-   * Mevcut dosyanin indirme gecmisini kaydet.
-   * Modal kapanmadan once cagirilir.
-   */
+  // --- Multi-dosya ---
+
   saveDosyaContext() {
-    if (!this.dosyaBilgileri || !this.dosyaBilgileri.dosyaId) return;
+    if (!this.#dosyaBilgileri?.dosyaId) return;
 
-    const dosyaId = this.dosyaBilgileri.dosyaId;
-    const existing = this.dosyaGecmisi.get(dosyaId);
+    const dosyaId = this.#dosyaBilgileri.dosyaId;
+    const existing = this.#dosyaGecmisi.get(dosyaId);
 
     const downloadedIds = existing
-      ? new Set([...existing.downloadedEvrakIds, ...this.downloadedEvrakIds])
-      : new Set(this.downloadedEvrakIds);
+      ? new Set([...existing.downloadedEvrakIds, ...this.#downloadedEvrakIds])
+      : new Set(this.#downloadedEvrakIds);
 
     const completedCount = existing
-      ? existing.stats.completed + this.stats.completed
-      : this.stats.completed;
+      ? existing.stats.completed + this.#stats.completed
+      : this.#stats.completed;
     const failedCount = existing
-      ? existing.stats.failed + this.stats.failed
-      : this.stats.failed;
+      ? existing.stats.failed + this.#stats.failed
+      : this.#stats.failed;
 
-    this.dosyaGecmisi.set(dosyaId, {
-      dosyaBilgileri: { ...this.dosyaBilgileri },
+    this.#dosyaGecmisi.set(dosyaId, {
+      dosyaBilgileri: { ...this.#dosyaBilgileri },
       downloadedEvrakIds: downloadedIds,
-      stats: { total: this.evraklar.length, completed: completedCount, failed: failedCount },
-      evrakSayisi: this.evraklar.length,
-      yargiTuruAdi: YARGI_TURLERI[this.dosyaBilgileri.yargiTuru] || this.dosyaBilgileri.yargiTuru
+      stats: { total: this.#evraklar.length, completed: completedCount, failed: failedCount },
+      evrakSayisi: this.#evraklar.length,
+      yargiTuruAdi: YARGI_TURLERI[this.#dosyaBilgileri.yargiTuru] || this.#dosyaBilgileri.yargiTuru
     });
 
-    this._recalcOturumStats();
+    this.#recalcOturumStats();
     console.log(`[UYAP-EXT] Dosya context saved: ${dosyaId} (${downloadedIds.size} downloaded)`);
-  },
+  }
 
-  /**
-   * Daha once taranan bir dosyanin indirme gecmisini restore et.
-   * @returns {boolean} gecmis bulundu mu
-   */
   restoreDosyaContext(dosyaId) {
-    const gecmis = this.dosyaGecmisi.get(dosyaId);
+    const gecmis = this.#dosyaGecmisi.get(dosyaId);
     if (!gecmis) return false;
 
-    this.downloadedEvrakIds = new Set(gecmis.downloadedEvrakIds);
-    console.log(`[UYAP-EXT] Dosya context restored: ${dosyaId} (${this.downloadedEvrakIds.size} previously downloaded)`);
+    this.#downloadedEvrakIds = new Set(gecmis.downloadedEvrakIds);
+    console.log(`[UYAP-EXT] Dosya context restored: ${dosyaId} (${this.#downloadedEvrakIds.size} previously downloaded)`);
     return true;
-  },
+  }
 
-  /**
-   * Belirli bir dosya icin gecmis dondur.
-   */
   getDosyaGecmisi(dosyaId) {
-    return this.dosyaGecmisi.get(dosyaId) || null;
-  },
+    return this.#dosyaGecmisi.get(dosyaId) || null;
+  }
 
-  /**
-   * Herhangi bir dosyada bu evrak daha once indirilmis mi?
-   */
   isEvrakDownloaded(evrakId) {
-    if (this.downloadedEvrakIds.has(evrakId)) return true;
-    for (const [, ctx] of this.dosyaGecmisi) {
+    if (this.#downloadedEvrakIds.has(evrakId)) return true;
+    for (const [, ctx] of this.#dosyaGecmisi) {
       if (ctx.downloadedEvrakIds.has(evrakId)) return true;
     }
     return false;
-  },
+  }
 
-  /**
-   * Oturum istatistiklerini dosyaGecmisi'nden yeniden hesapla.
-   */
-  _recalcOturumStats() {
+  #recalcOturumStats() {
     let toplamIndirilen = 0;
     let toplamBasarisiz = 0;
-    for (const [, ctx] of this.dosyaGecmisi) {
+    for (const [, ctx] of this.#dosyaGecmisi) {
       toplamIndirilen += ctx.stats.completed;
       toplamBasarisiz += ctx.stats.failed;
     }
-    this.oturumStats.toplamIndirilen = toplamIndirilen;
-    this.oturumStats.toplamBasarisiz = toplamBasarisiz;
-  },
+    this.#oturumStats.toplamIndirilen = toplamIndirilen;
+    this.#oturumStats.toplamBasarisiz = toplamBasarisiz;
+  }
 
-  /**
-   * Oturum genelinde islenen dosya listesini dondur.
-   */
   getOturumOzeti() {
     const dosyalar = [];
-    for (const [dosyaId, ctx] of this.dosyaGecmisi) {
+    for (const [dosyaId, ctx] of this.#dosyaGecmisi) {
       dosyalar.push({
         dosyaId,
         dosyaNo: ctx.dosyaBilgileri.dosyaNo,
@@ -305,43 +227,37 @@ const AppState = {
     }
     return {
       dosyalar,
-      toplamIndirilen: this.oturumStats.toplamIndirilen,
-      toplamBasarisiz: this.oturumStats.toplamBasarisiz
+      toplamIndirilen: this.#oturumStats.toplamIndirilen,
+      toplamBasarisiz: this.#oturumStats.toplamBasarisiz
     };
-  },
+  }
 
-  /**
-   * Aktif dosya state'ini temizle.
-   * Dosya gecmisi ve oturum istatistikleri korunur.
-   */
+  // --- Reset ---
+
   resetActiveDosya() {
-    this.evraklar = [];
-    this.seciliEvrakIds = new Set();
-    this.treeData = null;
-    this.expandedFolders = new Set();
-    this.dosyaBilgileri = null;
-    this.downloadStatus = 'idle';
-    this.stats = { total: 0, completed: 0, failed: 0 };
-    this.sessionExpired = false;
-    this.pagination = null;
-    this.downloadedEvrakIds = new Set();
-    this.initialized = false;
+    this.#evraklar = [];
+    this.#seciliEvrakIds = new Set();
+    this.#treeData = null;
+    this.#expandedFolders = new Set();
+    this.#dosyaBilgileri = null;
+    this.#downloadStatus = 'idle';
+    this.#stats = { total: 0, completed: 0, failed: 0 };
+    this.#sessionExpired = false;
+    this.#pagination = null;
+    this.#downloadedEvrakIds = new Set();
+    this.#initialized = false;
 
     if (this.onReset) this.onReset();
-
     console.log('[UYAP-EXT] Active dosya reset (history preserved)');
-  },
+  }
 
-  /**
-   * Tam sifirlama — oturum sonu veya sayfa yenileme.
-   * Dosya gecmisi dahil her sey temizlenir.
-   */
   reset() {
     this.resetActiveDosya();
-    this.dosyaGecmisi = new Map();
-    this.oturumStats = { toplamIndirilen: 0, toplamBasarisiz: 0 };
-    this.kisiAdi = '';
-
+    this.#dosyaGecmisi = new Map();
+    this.#oturumStats = { toplamIndirilen: 0, toplamBasarisiz: 0 };
+    this.#kisiAdi = '';
     console.log('[UYAP-EXT] Full state reset complete');
   }
-};
+}
+
+const AppState = new AppStateManager();

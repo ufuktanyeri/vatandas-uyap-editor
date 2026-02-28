@@ -1,24 +1,15 @@
 /**
- * ui.js - UI bileşenleri
- * Kaynak: v4 UI pattern (FAB + drawer) + v2 bileşen yapısı
+ * ui.js - UI bileşenleri (UIManager class)
  *
- * Aşamalar:
- * 1. FAB butonu → Drawer aç
- * 2. Klasörler listelenir (checkbox ile seçim)
- * 3. "Evrakları Getir" → Seçili klasörlerin evrakları listelenir
- * 4. Evrak seçimi + "İndir" → Toplu indirme başlar
- * 5. Progress bar + durum gösterimi
+ * FALLBACK grup rendering ve renderEvrakCard kaldırıldı (T-1).
+ * renderTreeView → #renderFolderNode + #renderFileNode split.
  */
 
-const UI = (() => {
-  const $ = (sel, root) => (root || document).querySelector(sel);
-  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+class UIManager {
+  #qs(sel, root) { return (root || document).querySelector(sel); }
 
-  /**
-   * Ana UI yapısını oluştur
-   */
-  function createUI() {
-    if ($('#uyap-extension-root')) return;
+  createUI() {
+    if (this.#qs('#uyap-extension-root')) return;
 
     const root = document.createElement('div');
     root.id = 'uyap-extension-root';
@@ -121,224 +112,116 @@ const UI = (() => {
     document.body.appendChild(root);
   }
 
-  /**
-   * Drawer'ı aç
-   */
-  function openDrawer() {
-    const drawer = $('#uyap-ext-drawer');
-    const overlay = $('#uyap-ext-overlay');
+  openDrawer() {
+    const drawer = this.#qs('#uyap-ext-drawer');
+    const overlay = this.#qs('#uyap-ext-overlay');
     if (drawer) drawer.classList.add('uyap-ext-drawer--open');
     if (overlay) overlay.classList.add('uyap-ext-drawer-overlay--open');
   }
 
-  /**
-   * Drawer'ı kapat
-   */
-  function closeDrawer() {
-    const drawer = $('#uyap-ext-drawer');
-    const overlay = $('#uyap-ext-overlay');
+  closeDrawer() {
+    const drawer = this.#qs('#uyap-ext-drawer');
+    const overlay = this.#qs('#uyap-ext-overlay');
     if (drawer) drawer.classList.remove('uyap-ext-drawer--open');
     if (overlay) overlay.classList.remove('uyap-ext-drawer-overlay--open');
   }
 
-  /**
-   * Stats alanını güncelle
-   */
-  function updateStats(html) {
-    const statsEl = $('#uyap-ext-stats');
+  updateStats(html) {
+    const statsEl = this.#qs('#uyap-ext-stats');
     if (statsEl) statsEl.innerHTML = html;
   }
 
-  /**
-   * Recursive tree view renderer
-   * @param {Array} nodes - Tree nodes
-   * @param {Number} level - Nesting level (for indentation)
-   * @returns {String} HTML
-   */
-  function renderTreeView(nodes, level = 0) {
-    if (!nodes || nodes.length === 0) return '';
-
-    return nodes.map(node => {
-      if (node.type === 'folder') {
-        const isExpanded = AppState.expandedFolders.has(node.fullPath);
-        const isFullySelected = AppState.isFolderFullySelected(node);
-        const fileCount = AppState.getFileCountInFolder(node);
-
-        return `
-          <div class="uyap-ext-tree-node uyap-ext-tree-node--folder"
-               data-level="${level}">
-
-            <div class="uyap-ext-tree-header" data-path="${escapeHtml(node.fullPath)}">
-              <span class="uyap-ext-tree-toggle ${isExpanded ? 'uyap-ext-tree-toggle--open' : ''}">
-                <i class="fa fa-caret-right"></i>
-              </span>
-
-              <input type="checkbox"
-                     class="uyap-ext-folder-checkbox"
-                     data-path="${escapeHtml(node.fullPath)}"
-                     ${isFullySelected ? 'checked' : ''}>
-
-              <i class="fa fa-folder uyap-ext-tree-icon"></i>
-
-              <span class="uyap-ext-tree-name">${escapeHtml(node.name)}</span>
-
-              <span class="uyap-ext-tree-count">${fileCount}</span>
-            </div>
-
-            <div class="uyap-ext-tree-children"
-                 style="display: ${isExpanded ? 'block' : 'none'}">
-              ${renderTreeView(node.children, level + 1)}
-            </div>
-          </div>
-        `;
-      } else {
-        // File node
-        const isChecked = AppState.seciliEvrakIds.has(node.evrakId);
-        const metaParts = [];
-        if (node.metadata && node.metadata.evrakTuru) metaParts.push(node.metadata.evrakTuru);
-        if (node.metadata && node.metadata.evrakTarihi) metaParts.push(node.metadata.evrakTarihi);
-
-        return `
-          <div class="uyap-ext-tree-node uyap-ext-tree-node--file"
-               data-level="${level}"
-               data-evrak-id="${node.evrakId}">
-
-            <input type="checkbox"
-                   class="uyap-ext-file-checkbox uyap-ext-card__checkbox"
-                   data-evrak-id="${node.evrakId}"
-                   ${isChecked ? 'checked' : ''}>
-
-            <i class="fa fa-file-text-o uyap-ext-tree-icon"></i>
-
-            <div class="uyap-ext-tree-file-content">
-              <p class="uyap-ext-tree-file-name" title="${escapeHtml(node.name)}">
-                ${escapeHtml(node.name)}
-              </p>
-              ${metaParts.length > 0
-                ? `<div class="uyap-ext-card__meta">
-                     ${metaParts.map(m => `<span>${escapeHtml(m)}</span>`).join('')}
-                   </div>`
-                : ''}
-            </div>
-          </div>
-        `;
-      }
-    }).join('');
-  }
-
-  /**
-   * Evrak listesini gruplu şekilde render et
-   */
-  function renderEvraklar() {
-    const body = $('#uyap-ext-body');
-    const emptyEl = $('#uyap-ext-empty');
+  renderEvraklar() {
+    const body = this.#qs('#uyap-ext-body');
     if (!body) return;
 
-    // YENİ: Tree data var mı kontrol et
     if (AppState.treeData && AppState.treeData.length > 0) {
-      body.innerHTML = renderTreeView(AppState.treeData, 0);
-      updateSelectionUI();
+      body.innerHTML = this.#renderTreeView(AppState.treeData, 0);
+      this.updateSelectionUI();
       return;
     }
 
-    // FALLBACK: Eski grup rendering (backward compat)
-    const groups = AppState.getGroupedEvraklar();
-
-    if (groups.size === 0) {
-      body.innerHTML = '';
-      if (emptyEl) {
-        emptyEl.style.display = '';
-        body.appendChild(emptyEl);
-      }
-      return;
-    }
-
-    body.innerHTML = '';
-    let groupIndex = 0;
-
-    groups.forEach((evraklar, folderName) => {
-      const groupEl = document.createElement('div');
-      groupEl.className = 'uyap-ext-group';
-      groupEl.dataset.folder = folderName;
-
-      // Klasörün tüm evrakları seçili mi kontrol et
-      const allSelected = evraklar.every(e => AppState.seciliEvrakIds.has(e.evrakId));
-
-      groupEl.innerHTML = `
-        <div class="uyap-ext-group__header" data-group="${groupIndex}">
-          <input type="checkbox" class="uyap-ext-group__checkbox"
-                 data-folder="${folderName}" ${allSelected ? 'checked' : ''}>
-          <span class="uyap-ext-group__toggle uyap-ext-group__toggle--open">
-            <i class="fa fa-caret-right"></i>
-          </span>
-          <i class="fa fa-folder uyap-ext-group__folder-icon"></i>
-          <span class="uyap-ext-group__name">${escapeHtml(folderName)}</span>
-          <span class="uyap-ext-group__count">${evraklar.length}</span>
-        </div>
-        <div class="uyap-ext-group__body" data-group-body="${groupIndex}">
-          ${evraklar.map(evrak => renderEvrakCard(evrak)).join('')}
-        </div>
-      `;
-
-      body.appendChild(groupEl);
-      groupIndex++;
-    });
-
-    updateSelectionUI();
+    body.innerHTML = `
+      <div class="uyap-ext-empty" id="uyap-ext-empty">
+        <i class="fa fa-inbox"></i>
+        Henüz tarama yapılmadı
+      </div>
+    `;
   }
 
-  /**
-   * Tek evrak kartı HTML'i
-   */
-  function renderEvrakCard(evrak) {
-    const checked = AppState.seciliEvrakIds.has(evrak.evrakId) ? 'checked' : '';
-    const metaParts = [];
-    if (evrak.evrakTuru) metaParts.push(evrak.evrakTuru);
-    if (evrak.evrakTarihi) metaParts.push(evrak.evrakTarihi);
+  #renderTreeView(nodes, level) {
+    if (!nodes || nodes.length === 0) return '';
+    return nodes.map(node =>
+      node.type === 'folder'
+        ? this.#renderFolderNode(node, level)
+        : this.#renderFileNode(node, level)
+    ).join('');
+  }
+
+  #renderFolderNode(node, level) {
+    const isExpanded = AppState.expandedFolders.has(node.fullPath);
+    const isFullySelected = AppState.isFolderFullySelected(node);
+    const fileCount = AppState.getFileCountInFolder(node);
 
     return `
-      <div class="uyap-ext-card" data-evrak-id="${evrak.evrakId}">
-        <input type="checkbox" class="uyap-ext-card__checkbox"
-               data-evrak-id="${evrak.evrakId}" ${checked}>
-        <div class="uyap-ext-card__content">
-          <p class="uyap-ext-card__name" title="${escapeHtml(evrak.name)}">${escapeHtml(evrak.name)}</p>
+      <div class="uyap-ext-tree-node uyap-ext-tree-node--folder" data-level="${level}">
+        <div class="uyap-ext-tree-header" data-path="${escapeHtml(node.fullPath)}">
+          <span class="uyap-ext-tree-toggle ${isExpanded ? 'uyap-ext-tree-toggle--open' : ''}">
+            <i class="fa fa-caret-right"></i>
+          </span>
+          <input type="checkbox" class="uyap-ext-folder-checkbox"
+                 data-path="${escapeHtml(node.fullPath)}" ${isFullySelected ? 'checked' : ''}>
+          <i class="fa fa-folder uyap-ext-tree-icon"></i>
+          <span class="uyap-ext-tree-name">${escapeHtml(node.name)}</span>
+          <span class="uyap-ext-tree-count">${fileCount}</span>
+        </div>
+        <div class="uyap-ext-tree-children" style="display: ${isExpanded ? 'block' : 'none'}">
+          ${this.#renderTreeView(node.children, level + 1)}
+        </div>
+      </div>
+    `;
+  }
+
+  #renderFileNode(node, level) {
+    const isChecked = AppState.seciliEvrakIds.has(node.evrakId);
+    const metaParts = [];
+    if (node.metadata?.evrakTuru) metaParts.push(node.metadata.evrakTuru);
+    if (node.metadata?.evrakTarihi) metaParts.push(node.metadata.evrakTarihi);
+
+    return `
+      <div class="uyap-ext-tree-node uyap-ext-tree-node--file"
+           data-level="${level}" data-evrak-id="${node.evrakId}">
+        <input type="checkbox" class="uyap-ext-file-checkbox"
+               data-evrak-id="${node.evrakId}" ${isChecked ? 'checked' : ''}>
+        <i class="fa fa-file-text-o uyap-ext-tree-icon"></i>
+        <div class="uyap-ext-tree-file-content">
+          <p class="uyap-ext-tree-file-name" title="${escapeHtml(node.name)}">
+            ${escapeHtml(node.name)}
+          </p>
           ${metaParts.length > 0
-            ? `<div class="uyap-ext-card__meta">${metaParts.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>`
+            ? `<div class="uyap-ext-card__meta">
+                 ${metaParts.map(m => `<span>${escapeHtml(m)}</span>`).join('')}
+               </div>`
             : ''}
         </div>
       </div>
     `;
   }
 
-  /**
-   * Seçim UI'ını güncelle (buton durumları, sayaç)
-   */
-  function updateSelectionUI() {
+  updateSelectionUI() {
     const count = AppState.seciliEvrakIds.size;
-    const countEl = $('#uyap-ext-selected-count');
-    const downloadBtn = $('#uyap-ext-download');
+    const countEl = this.#qs('#uyap-ext-selected-count');
+    const downloadBtn = this.#qs('#uyap-ext-download');
 
     if (countEl) countEl.textContent = count;
     if (downloadBtn) downloadBtn.disabled = count === 0;
-
-    // Grup checkbox'larını senkronize et
-    $$('.uyap-ext-group__checkbox').forEach(cb => {
-      const folderName = cb.dataset.folder;
-      const groups = AppState.getGroupedEvraklar();
-      const folderEvraklar = groups.get(folderName) || [];
-      cb.checked = folderEvraklar.length > 0 &&
-        folderEvraklar.every(e => AppState.seciliEvrakIds.has(e.evrakId));
-    });
   }
 
-  /**
-   * Progress bar güncelle
-   */
-  function updateProgress(current, total, status) {
-    const progressEl = $('#uyap-ext-progress');
-    const bar = $('#uyap-ext-progress-bar');
-    const label = $('#uyap-ext-progress-label');
-    const value = $('#uyap-ext-progress-value');
+  updateProgress(current, total, status) {
+    const progressEl = this.#qs('#uyap-ext-progress');
+    const bar = this.#qs('#uyap-ext-progress-bar');
+    const label = this.#qs('#uyap-ext-progress-label');
+    const value = this.#qs('#uyap-ext-progress-value');
 
     if (!progressEl) return;
     progressEl.style.display = '';
@@ -348,16 +231,13 @@ const UI = (() => {
     if (bar) {
       bar.style.width = `${percent}%`;
       bar.className = 'uyap-ext-progress__bar';
-
-      if (status === 'downloading') {
-        bar.classList.add('uyap-ext-progress__bar--downloading', 'uyap-ext-progress__bar--animated');
-      } else if (status === 'completed') {
-        bar.classList.add('uyap-ext-progress__bar--completed');
-      } else if (status === 'paused') {
-        bar.classList.add('uyap-ext-progress__bar--paused');
-      } else if (status === 'error') {
-        bar.classList.add('uyap-ext-progress__bar--error');
-      }
+      const statusClasses = {
+        downloading: ['uyap-ext-progress__bar--downloading', 'uyap-ext-progress__bar--animated'],
+        completed: ['uyap-ext-progress__bar--completed'],
+        paused: ['uyap-ext-progress__bar--paused'],
+        error: ['uyap-ext-progress__bar--error']
+      };
+      (statusClasses[status] || []).forEach(c => bar.classList.add(c));
     }
 
     if (value) value.textContent = `${current}/${total}`;
@@ -373,36 +253,26 @@ const UI = (() => {
     }
   }
 
-  /**
-   * Progress hata mesajı göster
-   */
-  function showProgressError(message) {
-    const errorEl = $('#uyap-ext-progress-error');
+  showProgressError(message) {
+    const errorEl = this.#qs('#uyap-ext-progress-error');
     if (errorEl) {
       errorEl.textContent = message;
       errorEl.style.display = '';
     }
   }
 
-  /**
-   * Session expired alert göster
-   */
-  function showSessionAlert() {
-    const alertEl = $('#uyap-ext-session-alert');
+  showSessionAlert() {
+    const alertEl = this.#qs('#uyap-ext-session-alert');
     if (alertEl) alertEl.style.display = '';
   }
 
-  /**
-   * İndirme/tarama moduna göre butonları göster/gizle
-   */
-  function showMode(mode) {
-    const scanBtn = $('#uyap-ext-scan');
-    const selectionActions = $('#uyap-ext-selection-actions');
-    const downloadActions = $('#uyap-ext-download-actions');
-    const controlActions = $('#uyap-ext-control-actions');
-    const modeRow = $('#uyap-ext-mode-row');
+  showMode(mode) {
+    const scanBtn = this.#qs('#uyap-ext-scan');
+    const selectionActions = this.#qs('#uyap-ext-selection-actions');
+    const downloadActions = this.#qs('#uyap-ext-download-actions');
+    const controlActions = this.#qs('#uyap-ext-control-actions');
+    const modeRow = this.#qs('#uyap-ext-mode-row');
 
-    // Hepsini gizle
     if (selectionActions) selectionActions.style.display = 'none';
     if (downloadActions) downloadActions.style.display = 'none';
     if (controlActions) controlActions.style.display = 'none';
@@ -453,19 +323,6 @@ const UI = (() => {
         break;
     }
   }
+}
 
-  return {
-    createUI,
-    openDrawer,
-    closeDrawer,
-    updateStats,
-    renderEvraklar,
-    updateSelectionUI,
-    updateProgress,
-    showProgressError,
-    showSessionAlert,
-    showMode,
-    $,
-    $$
-  };
-})();
+const UI = new UIManager();
