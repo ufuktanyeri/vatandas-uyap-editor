@@ -8,30 +8,38 @@ alwaysApply: true
 
 ## Mevcut Sürüm ve Durum
 
-- **Sürüm:** v2.1+ (manifest.json: 2.0.0, henüz güncellenmedi)
-- **Son commit:** `563f913` — docs: add session-d transcript, update project context
+- **Sürüm:** v2.1.0 (manifest.json güncel)
+- **Son commit:** `8a546ce` — fix(style): replace hardcoded error colors with CSS variable
 - **Repo:** https://github.com/ufuktanyeri/vatandas-uyap-editor
-- **Branch:** main (tüm geliştirme doğrudan main üzerinde yapılıyor — henüz Git Flow Lite uygulanmadı)
+- **Branch:** main
 
 ## Tamamlanan Önemli Çalışmalar
 
 1. **State-UI decoupling** — AppState.onReset callback pattern ile UI bağımlılığı kaldırıldı
 2. **Downloader decoupling** — AppState erişimi parametreye çevrildi, dinamik endpoint routing eklendi
-3. **XSS koruma** — escapeHtml() constants.js'e taşındı, tüm stats HTML escape edildi
-4. **CSS değişkenleri** — Tree view + diğer tüm hardcoded hex renkler CSS değişkenlerine taşındı
+3. **XSS koruma** — escapeHtml() constants.js'e taşındı, tüm stats HTML escape edildi (v2.1.0 #1 ✅)
+4. **CSS değişkenleri** — Tüm hardcoded hex renkler CSS değişkenlerine taşındı (v2.1.0 #6, #7 ✅)
 5. **Multi-dosya context tracking** — dosyaGecmisi Map, oturumStats, saveDosyaContext/restoreDosyaContext
-6. **Birim test altyapısı** — Vitest + jsdom, 70 test (constants: 31, scanner: 17, state: 22)
-7. **Yargı türü desteği** — Tüm yargiTuru'ler için doğru endpoint routing (0,1,2,3,5,6,11,25,26,kvk)
+6. **Birim test altyapısı** — Vitest + jsdom, 70 test (constants: 31, scanner: 17, state: 22) (v2.3.0 #5 ✅)
+7. **Yargı türü desteği** — Tüm yargiTuru'ler için doğru endpoint routing
+8. **UYAP DOM doğrulaması** — Chrome Claude ile canlı DOM analizi yapıldı, tüm selector'lar doğrulandı
+9. **window.dosyaId keşfi** — UYAP global olarak tanımlıyor, findDosyaId() basitleştirilebilir
 
-## Bekleyen Görevler (Öncelik Sırasıyla)
+## Bekleyen Görevler (v2.2.0)
 
 Detaylar: `docs/todo-by-prompt.md`
 
-1. **#3 Eski Flat Rendering Temizliği** — ui.js/main.js/state.js'deki ölü fallback kodu
-2. **#4 IIFE Global Scope Temizliği** — constants.js + scanner.js'i IIFE'ye sarmala
+### Yeni Bulgular (kod kalitesi değerlendirmesinden)
+- **BUG:** scanFiletree() filetree bulunamazsa `[]` dönüyor, `{ tree:[], flatList:[] }` dönmeli
+- **Duplicate kod:** findDosyaId + getYargiTuru jQuery parsing → ortak helper
+- **#8 güncelleme:** window.dosyaId global mevcut, innerHTML tamamen kaldırılabilir
+
+### Mevcut Todo
+1. **#3 Eski Flat Rendering Temizliği** — ui.js/main.js/state.js ~120 satır ölü kod
+2. **#4 IIFE Global Scope Temizliği** — constants.js + scanner.js (~27 global)
 3. **#2 Blob URL İndirme Geçişi** — base64 yerine blob URL (bellek %33 tasarruf)
-4. **#8 Scanner innerHTML** — findDosyaId() hâlâ innerHTML kullanıyor
-5. **#10 SW Promise Wrapper** — service-worker.js callback→native Promise
+4. **#8 Scanner findDosyaId** — window.dosyaId kontrolü ekle, innerHTML kaldır
+5. **#10 SW Promise Wrapper** — callback→native Promise
 6. **#11 DOCX vs UDF** — ZIP magic bytes sonrası Content_Types kontrolü
 7. **#9 JSDoc** — Tüm dosyalara type annotation
 8. **#12 CHANGELOG.md** — Keep a Changelog formatında başlat
@@ -51,3 +59,4 @@ npm run lint       # ESLint
 - Downloader IIFE internal fonksiyonları (detectFileType vb.) henüz test edilmiyor
 - escapeHtml() çift tırnak escape etmez (textContent+innerHTML yaklaşımı, beklenen davranış)
 - WAF koruması: indirmeler arası minimum 300ms gecikme zorunlu
+- PowerShell'de HERE-DOC desteklenmiyor — commit mesajları .git/COMMIT_MSG dosyası ile yazılmalı
